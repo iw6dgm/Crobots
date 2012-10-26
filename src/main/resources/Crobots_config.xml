@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<properties>
+  <category name="RemoteDatabase">
+  	<property name="driver" value="com.mysql.jdbc.Driver" />
+  	<property name="jdbc" value="jdbc:mysql://localhost:3306/crobots?useCompression=true" />
+  	<property name="user" value="crobots" />
+  	<property name="pwd" value="test" />  
+  	<property name="autocommit" value="false" />  
+  	<!--
+  	<property name="jdbc" value="jdbc:mysql://10.208.17.129:3306/crobots?useCompression=true" />
+  	<property name="user" value="crobots" />
+  	<property name="pwd" value="214254" />  
+  	<property name="autocommit" value="false" />  
+    -->
+  </category>
+  <category name="LocalDatabase">
+  	<property name="driver" value="net.sourceforge.jtds.jdbc.Driver" />
+  	<property name="jdbc" value="jdbc:jtds:sqlserver://mssql:1433/tp4;socketKeepAlive=true" />
+  	<property name="user" value="crobots" />
+  	<property name="pwd" value="test" />
+  	<property name="autocommit" value="false" />  
+  	<!--
+  	<property name="driver" value="oracle.jdbc.OracleDriver" />
+  	<property name="jdbc" value="jdbc:oracle:thin:@ORACLE:1521:CROBOTS" />
+  	<property name="user" value="CROBOTS" />
+  	<property name="pwd" value="TEST" />
+  	<property name="autocommit" value="true" />  
+  	-->
+  </category>
+  <category name="HTTPClient">
+  	<property name="hostname" value="http://localhost/crobots/sql" />
+  	<property name="username" value="crobots" />
+  	<property name="pwd" value="test" />
+  </category>
+  <category name="Application">
+  	<property name="httpmode" value="false" />
+  	<property name="localdb" value="true" />
+  	<property name="cmdscript" value="crobots.sh" />
+  	<property name="onlytest" value="false" />
+  	<property name="onlyf2f" value="false" />
+  	<property name="only3vs3" value="false" />
+  	<property name="only4vs4" value="false" />
+  	<property name="killfile" value="true" />
+  	<property name="maxthreads" value="2" />
+  	<property name="bufferminsize" value="25" />
+  	<property name="mainsleepinterval" value="1000" />
+  	<property name="f2fsleepinterval" value="5000" />
+  	<property name="3vs3sleepinterval" value="4000" />
+  	<property name="4vs4sleepinterval" value="2000" />
+  </category>
+  <category name="Tournament">
+  	<property name="fileinput" value="torneo2012/list.txt" />
+  	<property name="path" value="torneo902012" />
+  	<property name="numofmatchf2f" value="2500" />
+  	<property name="numofmatch3vs3" value="48" />
+  	<property name="numofmatch4vs4" value="2" />
+  </category>
+</properties>
