@@ -1,6 +1,5 @@
 package it.joshua.crobots.impl;
 
-import it.joshua.crobots.SharedVariables;
 import it.joshua.crobots.bean.GamesBean;
 import it.joshua.crobots.bean.RobotGameBean;
 import it.joshua.crobots.data.TableName;

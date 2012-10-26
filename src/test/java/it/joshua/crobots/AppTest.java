@@ -3,8 +3,6 @@ package it.joshua.crobots;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.PropertyConfigurator;
 
 /**
  * Unit test for simple App.
