@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wmh="http://www.wmhelp.com/2003/eGenerator" elementFormDefault="qualified">
+  <xs:element name="MatchList">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Match" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Match">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Games"/>
+        <xs:element ref="Robots"/>
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:int" use="required"/>
+      <xs:attribute name="action" type="xs:string" use="required"/>
+      <xs:attribute name="tableName" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Games" type="xs:int"/>
+  <xs:element name="Robots">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Robot" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Robot">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Win"/>
+        <xs:element ref="Tie"/>
+        <xs:element ref="Points"/>
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Win" type="xs:int"/>
+  <xs:element name="Tie" type="xs:int"/>
+  <xs:element name="Points" type="xs:int"/>
+</xs:schema>
