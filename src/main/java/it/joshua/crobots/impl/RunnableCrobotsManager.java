@@ -55,7 +55,7 @@ public class RunnableCrobotsManager implements Runnable {
                     isCompleted = true;
                 }
 
-                if (!isCompleted && sharedVariables.getBufferSize() <= sharedVariables.getBufferMinSize()) {
+                if (!isCompleted && sharedVariables.getBufferSize() < sharedVariables.getBufferSize()) {
                     i = mySQLManager.getGames();
                     if (i != null && i.size() > 0) {
                         logger.fine("Append " + i.size() + " match(es) to buffer...");
