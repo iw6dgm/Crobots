@@ -602,13 +602,12 @@ public class Crobots {
                         lost = cmdString.substring(48, 57).trim();
                         point = cmdString.substring(58, 68).trim();
 
-                        logger.fine("Test ok " + robot + " games=" + games
+                        logger.info("Test ok " + robot + " games=" + games
                                 + " wins=" + won + " tie=" + tie + " lost="
                                 + lost + " point=" + point);
                         ok++;
                     } else {
-                        logger
-                                .severe("Test " + tempRobot
+                        logger.severe("Test " + tempRobot
                                 + " failed!");
                         failure++;
                     }
@@ -617,7 +616,7 @@ public class Crobots {
                     failure++;
                 }
             }
-            logger.fine("Test OK(s)=" + ok + "; Failure(s)=" + failure);
+            logger.info("Test OK(s)=" + ok + "; Failure(s)=" + failure);
         }
     }
 
