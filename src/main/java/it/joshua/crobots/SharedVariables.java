@@ -20,7 +20,7 @@ public class SharedVariables {
 
     private static SharedVariables instance = new SharedVariables();
     private static Configuration configuration = ConfigurationManager.getConfiguration("Crobots");
-    private static final Logger logger = Logger.getLogger(SharedVariables.class.getName());
+    private static Logger logger;
 
     public int getBigBuffer() {
         return bigBuffer;
@@ -295,7 +295,7 @@ public class SharedVariables {
     }
 
     private SharedVariables() {
-        
+        logger = Logger.getLogger(SharedVariables.class.getName());
         if (configuration==null || configuration.isNew()) {
             try {
                 File file = new File("Crobots_config.xml");

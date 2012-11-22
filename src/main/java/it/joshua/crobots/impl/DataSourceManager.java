@@ -17,10 +17,11 @@ import org.apache.commons.dbcp.BasicDataSource;
 public class DataSourceManager implements DataSourceManagerInterface {
 
     private static SharedVariables sharedVariables = SharedVariables.getInstance();
-    private static final Logger logger = Logger.getLogger(DataSourceManager.class.getName());
+    private static Logger logger;
     private static BasicDataSource localDataSource, remoteDataSource;
 
-    private DataSourceManager() {    
+    private DataSourceManager() {
+        logger = Logger.getLogger(DataSourceManager.class.getName());
     }
 
     private static class Container {
