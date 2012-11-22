@@ -27,10 +27,11 @@ import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import org.apache.log4j.Logger;
 
 /*
  * Created on 13-lug-2006
@@ -53,7 +54,7 @@ public class Crobots {
     private static int BUILD = 94;
     private static String VERSION = "Crobots Java Tournament Manager v.4.56 (build " + BUILD + ") - 02/feb/2012 - (C) Maurizio Camangi";
     static Vector<String> robots;
-    private static Logger logger = Logger.getLogger(Crobots.class.getName());
+    private static final Logger logger = Logger.getLogger(Crobots.class.getName());
     private static SharedVariables sharedVariables;
 
     public static void main(String[] args) {
@@ -94,8 +95,8 @@ public class Crobots {
         }
 
         if (fileReader != null) {
-            logger.warn("Crobots.backup file found!");
-            logger.warn("Recovering lost URLs...");
+            logger.warning("Crobots.backup file found!");
+            logger.warning("Recovering lost URLs...");
             String url;
             try {
                 bufferedReader = new BufferedReader(fileReader);
@@ -103,25 +104,25 @@ public class Crobots {
                     sharedVariables.getHttpURLs().add(url);
                 }
             } catch (Exception e) {
-                logger.error("", e);
+                logger.log(Level.SEVERE, "Crobots {0}", e);
             } finally {
                 try {
                     if (bufferedReader != null) {
                         bufferedReader.close();
                     }
                 } catch (IOException ex) {
-                    logger.error("", ex);
+                    logger.log(Level.SEVERE, "Crobots {0}", ex);
                 }
             }
-            logger.warn("HTTP URLs buffer size not empty : " + sharedVariables.getHttpURLs().size());
+            logger.warning("HTTP URLs buffer size not empty : " + sharedVariables.getHttpURLs().size());
 
             try {
                 fileReader.close();
-                logger.warn("Deleting Crobots.backup...");
+                logger.warning("Deleting Crobots.backup...");
                 File f = new File("Crobots.backup");
                 f.delete();
             } catch (Exception e) {
-                logger.error("", e);
+                logger.log(Level.SEVERE, "Crobots {0}", e);
             }
         }
 
@@ -132,15 +133,15 @@ public class Crobots {
         }
 
         if (fileReader != null) {
-            logger.warn("Crobots.backup.xml file found!");
-            logger.warn("Recovering lost matches...");
+            logger.warning("Crobots.backup.xml file found!");
+            logger.warning("Recovering lost matches...");
             MatchList ml = null;
             try {
                 JAXBContext context = JAXBContext.newInstance("it.joshua.crobots.xml");
                 Unmarshaller u = context.createUnmarshaller();
                 ml = (MatchList) u.unmarshal(fileReader);
             } catch (Exception e) {
-                logger.error("", e);
+                logger.log(Level.SEVERE, "Crobots {0}", e);
             }
             GamesBean gb;
             RobotGameBean rg;
@@ -155,14 +156,14 @@ public class Crobots {
                 }
             }
 
-            logger.warn("Game buffer size not empty : " + sharedVariables.getGamesSize());
+            logger.warning("Game buffer size not empty : " + sharedVariables.getGamesSize());
             try {
                 fileReader.close();
-                logger.warn("Deleting Crobots.backup.xml ...");
+                logger.warning("Deleting Crobots.backup.xml ...");
                 File f = new File("Crobots.backup.xml");
                 f.delete();
             } catch (Exception e) {
-                logger.error("", e);
+                logger.log(Level.SEVERE, "Crobots {0}", e);
             }
         }
 
@@ -175,7 +176,7 @@ public class Crobots {
 
                 while (sharedVariables.getHttpURLs().size() > 0) {
                     if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-                        logger.warn("Kill reached! Crobots.stop found!");
+                        logger.warning("Kill reached! Crobots.stop found!");
                         break;
                     }
                     url = sharedVariables.getHttpURLs().get(0);
@@ -184,12 +185,12 @@ public class Crobots {
                     try {
                         query = httpc.doQuery(url);
                     } catch (IOException e) {
-                        logger.error("", e);
+                        logger.log(Level.SEVERE, "Crobots {0}", e);
                     }
 
                     if (!(query != null && query.equals("ok"))) {
-                        logger.error(query);
-                        logger.error("SKIP: " + url);
+                        logger.severe(query);
+                        logger.severe("SKIP: " + url);
                         sharedVariables.getHttpURLs().add(url);
                     }
 
@@ -235,9 +236,9 @@ public class Crobots {
         }
 
         if (!sharedVariables.isGameBufferEmpty()) {
-            logger.warn("Game buffer size not empty : " + sharedVariables.getGamesSize());
+            logger.warning("Game buffer size not empty : " + sharedVariables.getGamesSize());
             if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-                logger.warn("Crobots.backup.xml file creation forced");
+                logger.warning("Crobots.backup.xml file creation forced");
                 ObjectFactory obf = new ObjectFactory();
                 MatchList ml = obf.createMatchList();
                 Match match;
@@ -272,7 +273,7 @@ public class Crobots {
                     m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
                     m.marshal(ml, f);
                 } catch (Exception e) {
-                    logger.error("", e);
+                    logger.log(Level.SEVERE, "Crobots {0}", e);
                 }
             } else {
                 flushGameBuffer();
@@ -280,8 +281,8 @@ public class Crobots {
         }
 
         if (sharedVariables.getHttpURLs().size() > 0) {
-            logger.warn("HTTP URLs buffer size not empty : " + sharedVariables.getHttpURLs().size());
-            logger.warn("Crobots.backup file creation forced");
+            logger.warning("HTTP URLs buffer size not empty : " + sharedVariables.getHttpURLs().size());
+            logger.warning("Crobots.backup file creation forced");
             BufferedWriter bufferedWriter = null;
             try {
                 bufferedWriter = new BufferedWriter(new FileWriter("Crobots.backup"));
@@ -289,7 +290,7 @@ public class Crobots {
                     bufferedWriter.write(url + "\n");
                 }
             } catch (Exception e) {
-                logger.error("", e);
+                logger.log(Level.SEVERE, "Crobots {0}", e);
             } finally {
                 try {
                     if (bufferedWriter != null) {
@@ -297,7 +298,7 @@ public class Crobots {
                         bufferedWriter.close();
                     }
                 } catch (IOException ex) {
-                    logger.error("", ex);
+                    logger.log(Level.SEVERE, "Crobots {0}", ex);
                 }
             }
         }
@@ -346,7 +347,7 @@ public class Crobots {
             threadExecutor.awaitTermination(sharedVariables.getTimeout(), TimeUnit.HOURS);
             threadExecutor.shutdownNow();
         } catch (InterruptedException e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE, "Crobots {0}", e);
         } finally {
             sharedVariables.setRunnable(false);
             logger.info("Threads gonna be stopped");
@@ -367,17 +368,17 @@ public class Crobots {
                     sharedVariables.getFileInput()));
 
             String robot = input.readLine();
-            logger.debug(robot);
+            logger.fine(robot);
             robots.add(robot);
             while (input.ready()) {
                 robot = input.readLine();
                 robots.add(robot);
-                logger.debug(robot);
+                logger.fine(robot);
             }
             input.close();
 
         } catch (Exception e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE, "Crobots {0}", e);
         }
     }
 
@@ -391,7 +392,7 @@ public class Crobots {
 
         for (GamesBean gb : sharedVariables.getBuffer()) {
             if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-                logger.warn("Kill reached! Crobots.stop found!");
+                logger.warning("Kill reached! Crobots.stop found!");
                 break;
             }
             gb = sharedVariables.getAndRemoveBean();
@@ -400,31 +401,31 @@ public class Crobots {
                     if ("f2f".equals(gb.getTableName())) {
                         mySQLManagerF2F.initializeUpdates();
                         if (!mySQLManagerF2F.updateResults(gb)) {
-                            logger.error("Can't update results of " + gb.toString());
-                            logger.warn("Recovery f2f id=" + gb.getId());
+                            logger.severe("Can't update results of " + gb.toString());
+                            logger.warning("Recovery f2f id=" + gb.getId());
                             mySQLManagerF2F.recoveryTable(gb);
                         }
                         mySQLManagerF2F.releaseUpdates();
                     } else if ("3vs3".equals(gb.getTableName())) {
                         mySQLManager3vs3.initializeUpdates();
                         if (!mySQLManager3vs3.updateResults(gb)) {
-                            logger.error("Can't update results of " + gb.toString());
-                            logger.warn("Recovery 3vs3 id=" + gb.getId());
+                            logger.severe("Can't update results of " + gb.toString());
+                            logger.warning("Recovery 3vs3 id=" + gb.getId());
                             mySQLManager3vs3.recoveryTable(gb);
                         }
                         mySQLManager3vs3.releaseUpdates();
                     } else if ("4vs4".equals(gb.getTableName())) {
                         mySQLManager4vs4.initializeUpdates();
                         if (!mySQLManager4vs4.updateResults(gb)) {
-                            logger.error("Can't update results of " + gb.toString());
-                            logger.warn("Recovery 4vs4 id=" + gb.getId());
+                            logger.severe("Can't update results of " + gb.toString());
+                            logger.warning("Recovery 4vs4 id=" + gb.getId());
                             mySQLManager4vs4.recoveryTable(gb);
                         }
                         mySQLManager4vs4.releaseUpdates();
                     }
                     break;
                 case "recovery":
-                    logger.warn("Recovery " + gb.toString());
+                    logger.warning("Recovery " + gb.toString());
                     switch (gb.getTableName().getTableName()) {
                         case "f2f":
                             mySQLManagerF2F.recoveryTable(gb);
@@ -483,7 +484,7 @@ public class Crobots {
         robotTest(manager);
 
         if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-            logger.warn("Kill reached! " + sharedVariables.getKillFile() + " found!");
+            logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
         }
 
         SQLManager mySQLManager = SQLManager.getInstance(TableName.F2F);
@@ -493,7 +494,7 @@ public class Crobots {
         if (mySQLManager.test(false)) {
             logger.info("Database store procedure test ok!");
         } else {
-            logger.error("Database store procedure test failed!");
+            logger.severe("Database store procedure test failed!");
         }
 
         if (sharedVariables.isLocalDb()) {
@@ -502,7 +503,7 @@ public class Crobots {
             if (mySQLManager.test(true)) {
                 logger.info("Database store procedure test ok!");
             } else {
-                logger.error("Database store procedure test failed!");
+                logger.severe("Database store procedure test failed!");
             }
         }
         SQLManager.closeAll();
@@ -529,7 +530,7 @@ public class Crobots {
             SQLManager.closeAll();
             logger.info("Init completed.");
         } else {
-            logger.warn("Can't inizialize robots remotely!");
+            logger.warning("Can't inizialize robots remotely!");
         }
         if (!sharedVariables.isSetupMode()) {
             System.exit(0);
@@ -601,22 +602,22 @@ public class Crobots {
                         lost = cmdString.substring(48, 57).trim();
                         point = cmdString.substring(58, 68).trim();
 
-                        logger.debug("Test ok " + robot + " games=" + games
+                        logger.fine("Test ok " + robot + " games=" + games
                                 + " wins=" + won + " tie=" + tie + " lost="
                                 + lost + " point=" + point);
                         ok++;
                     } else {
                         logger
-                                .error("Test " + tempRobot
+                                .severe("Test " + tempRobot
                                 + " failed!");
                         failure++;
                     }
                 } else {
-                    logger.error("Test " + tempRobot + " failed!");
+                    logger.severe("Test " + tempRobot + " failed!");
                     failure++;
                 }
             }
-            logger.debug("Test OK(s)=" + ok + "; Failure(s)=" + failure);
+            logger.fine("Test OK(s)=" + ok + "; Failure(s)=" + failure);
         }
     }
 
@@ -634,10 +635,10 @@ public class Crobots {
         robotTest(manager);
 
         if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-            logger.warn("Kill reached! " + sharedVariables.getKillFile() + " found!");
+            logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
         }
 
-        logger.debug("Starting HTTP connection test...");
+        logger.fine("Starting HTTP connection test...");
         String temp = manager.encrypt("test");
 
         String url = sharedVariables.getHostName() + "/test.php?build=" + BUILD + "&checksum="
@@ -645,11 +646,11 @@ public class Crobots {
 
         HTTPClient httpc = new HTTPClient(sharedVariables.getUserName(), sharedVariables.getPassWord());
         try {
-            logger.debug(httpc.doQuery(url));
+            logger.fine(httpc.doQuery(url));
         } catch (IOException e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE, "Crobots {0}", e);
         }
-        logger.debug("HTTP connection test completed...");
+        logger.fine("HTTP connection test completed...");
         System.exit(0);
     }
 }

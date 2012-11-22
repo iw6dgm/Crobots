@@ -8,6 +8,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -15,8 +17,6 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 /**
  * @author mcamangi
@@ -31,7 +31,7 @@ public class HTTPClient {
 	//private String responseBody = null;
 	
 	public String user, pwd;
-	private Logger httplogger = Logger.getLogger(org.apache.commons.httpclient.HttpClient.class);
+	private static final Logger httplogger = Logger.getLogger(org.apache.commons.httpclient.HttpClient.class.getName());
 	
 	public void connect(String url) {
 
@@ -60,11 +60,11 @@ public class HTTPClient {
 	            //responseBody = method.getResponseBodyAsString();
 	        } catch (HttpException he) {
 	        	//httplogger.error("Http error connecting to '" + url + "'");
-	        	httplogger.warn("Attempt " + retry + " : " + he.getMessage());
+	        	httplogger.warning("Attempt " + retry + " : " + he.getMessage());
 	            //System.exit(-4);
 	        } catch (IOException ioe) {
 	        	//httplogger.error("Unable to connect to '" + url + "'");
-	        	httplogger.warn("Attempt " + retry + " : " + ioe.getMessage());
+	        	httplogger.warning("Attempt " + retry + " : " + ioe.getMessage());
 	            //System.exit(-3);
 	        }
         } while(!good_retry && (retry++ < 2));
@@ -102,7 +102,7 @@ public class HTTPClient {
 					}
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
-					httplogger.error(e1.getMessage());
+					httplogger.severe(e1.getMessage());
 				}
 				finally
 				{
@@ -111,7 +111,7 @@ public class HTTPClient {
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			httplogger.error(e.getMessage());
+			httplogger.severe(e.getMessage());
 		}
 		close();			
 		return lines;
@@ -120,6 +120,6 @@ public class HTTPClient {
 	public HTTPClient(String username, String password) {
 		user = username;
 		pwd  = password;
-		httplogger.setLevel(Level.WARN);
+		httplogger.setLevel(Level.WARNING);
 	}
 }

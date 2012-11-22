@@ -5,12 +5,13 @@ import it.joshua.crobots.data.TableName;
 import it.joshua.crobots.impl.Manager;
 import java.io.IOException;
 import java.util.StringTokenizer;
-import org.apache.log4j.Logger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Deprecated
 public class RunHTTP implements Runnable {
 
-    private Logger logger = Logger.getLogger(RunHTTP.class);
+    private static final Logger logger = Logger.getLogger(RunHTTP.class.getName());
     private String threadName;
     private TableName tableName;
     private Integer numOfMatch;
@@ -26,12 +27,12 @@ public class RunHTTP implements Runnable {
 
     private void selfRecovering(String id, String tableName, String checkSum) {
         String url = sharedVariables.getHostName() + "/engine.php?action=recovery&table=" + tableName + "&id=" + id + "&checksum=" + checkSum;
-        logger.warn("Trying to recovery Table=" + tableName + "; Id=" + id);
+        logger.warning("Trying to recovery Table=" + tableName + "; Id=" + id);
         HTTPClient httpc = new HTTPClient(sharedVariables.getUserName(), sharedVariables.getPassWord());
         try {
-            logger.debug(httpc.doQuery(url));
+            logger.fine(httpc.doQuery(url));
         } catch (IOException e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE,"RunHTTP {0}", e);
         }
 
     }
@@ -53,20 +54,20 @@ public class RunHTTP implements Runnable {
             try {
                 query = httpc.doQuery(url);
             } catch (IOException e) {
-                logger.error("", e);
+                logger.log(Level.SEVERE,"RunHTTP {0}", e);
             }
 
             if (query != null) {
                 try {
                     numOfMatch = Integer.parseInt(query);
                 } catch (Exception e) {
-                    logger.error(e.getMessage());
-                    logger.error(query);
-                    logger.error("Error retrieving " + tableName.getTableName().toUpperCase() + " parameters!");
+                    logger.severe(e.getMessage());
+                    logger.severe(query);
+                    logger.severe("Error retrieving " + tableName.getTableName().toUpperCase() + " parameters!");
                     throw new InterruptedException("Thread " + threadName + " interrupted!");
                 }
             } else {
-                logger.error("Error retrieving " + tableName.getTableName().toUpperCase() + " parameters!");
+                logger.severe("Error retrieving " + tableName.getTableName().toUpperCase() + " parameters!");
                 throw new InterruptedException("Thread " + threadName + " interrupted!");
             }
 
@@ -80,13 +81,13 @@ public class RunHTTP implements Runnable {
 
             do {
                 if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-                    logger.warn("Kill reached! " + sharedVariables.getKillFile() + " found!");
+                    logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
                     rows = false;
                 } else {
                     url = sharedVariables.getHostName() + "/engine.php?action=select_" + tableName + "&offset=" + sharedVariables.getBufferMinSize() + "&checksum=" + manager.encrypt("select" + tableName);
                     buffer = httpc.doQueryStream(url);
                     if (buffer[0] == null) {
-                        logger.debug("No " + tableName + " retreived");
+                        logger.fine("No " + tableName + " retreived");
                     }
                     if ((buffer[0] != null) && !(buffer[0].contains("Server Error"))) {
                         int n = 0;
@@ -120,7 +121,7 @@ public class RunHTTP implements Runnable {
                             try {
                                 outCmd = manager.cmdExec(in.toString());
                             } catch (Exception e) {
-                                logger.error("", e);
+                                logger.log(Level.SEVERE,"RunHTTP {0}", e);
                             }
 
                             if (outCmd != null
@@ -148,7 +149,7 @@ public class RunHTTP implements Runnable {
                                         tie = cmdString.substring(38, 47).trim();
                                         point = cmdString.substring(58, 68).trim();
 
-                                        logger.debug("Update Robot " + robot
+                                        logger.fine("Update Robot " + robot
                                                 + " games=" + games
                                                 + " wins=" + won
                                                 + " tie=" + tie
@@ -173,15 +174,15 @@ public class RunHTTP implements Runnable {
                                     try {
                                         query = httpc.doQuery(url);
                                     } catch (IOException e) {
-                                        logger.error("", e);
+                                        logger.log(Level.SEVERE,"RunHTTP {0}", e);
                                     }
 
                                     if (!(query != null && query.equals("ok"))) {
-                                        logger.error(query);
-                                        logger.error("SKIP: " + url);
+                                        logger.severe(query);
+                                        logger.severe("SKIP: " + url);
                                         selfRecovering(id, tableName.getTableName(), manager.encrypt("recovery" + tableName + id));
                                     }
-                                    //logger.debug(query);
+                                    //logger.fine(query);
                                     //if ((++counter % 100) == 0) logger.info("Reached " + counter + " updates count on thread " + threadName + " ...");						  		
                                 } else {
                                     StringBuilder errorString = new StringBuilder("Calculating match for ");
@@ -190,7 +191,7 @@ public class RunHTTP implements Runnable {
                                         errorString.append(" ")
                                                 .append(elements[r]);
                                     }
-                                    logger.error(errorString.toString());
+                                    logger.severe(errorString.toString());
                                     selfRecovering(id, tableName.getTableName(), manager.encrypt("recovery" + tableName + id));
                                 }
                             } else {
@@ -200,14 +201,14 @@ public class RunHTTP implements Runnable {
                                     errorString.append(" ")
                                             .append(elements[r]);
                                 }
-                                logger.error(errorString.toString());
+                                logger.severe(errorString.toString());
                                 selfRecovering(id, tableName.getTableName(), manager.encrypt("recovery" + tableName + id));
                             }
                         }
                     } else {
                         int n = 0;
                         while (buffer[n] != null) {
-                            logger.error(buffer[n++]);
+                            logger.severe(buffer[n++]);
                         }
                         rows = false;
                     }
@@ -220,7 +221,7 @@ public class RunHTTP implements Runnable {
             sharedVariables.setActiveThreads((Integer) (sharedVariables.getActiveThreads() - 1));
 
         } catch (InterruptedException exception) {
-            logger.error("", exception);
+            logger.log(Level.SEVERE,"RunHTTP {0}", exception);
             sharedVariables.setActiveThreads((Integer) (sharedVariables.getActiveThreads() - 1));
         }
 

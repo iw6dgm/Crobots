@@ -6,11 +6,12 @@ import it.joshua.crobots.bean.RobotGameBean;
 import it.joshua.crobots.data.TableName;
 import java.util.Collections;
 import java.util.List;
-import org.apache.log4j.Logger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RunnableCrobotsThread implements Runnable {
 
-    private static Logger logger = Logger.getLogger(RunnableCrobotsThread.class);
+    private static final Logger logger = Logger.getLogger(RunnableCrobotsThread.class.getName());
     private static SharedVariables sharedVariables = SharedVariables.getInstance();
     private String threadName;
     TableName tableName;
@@ -34,7 +35,7 @@ public class RunnableCrobotsThread implements Runnable {
             logger.info("Retrieving " + tableName.getTableName().toUpperCase() + " parameters...");
             numOfMatch = sharedVariables.getNumOfMatch(tableName);
             if (numOfMatch == 0) {
-                logger.error("Error retrieving " + tableName.getTableName().toUpperCase() + " parameters!");
+                logger.severe("Error retrieving " + tableName.getTableName().toUpperCase() + " parameters!");
                 throw new InterruptedException("Thread " + threadName + " interrupted!");
             }
             logger.info("Running sets of " + numOfMatch + " matches...");
@@ -48,7 +49,7 @@ public class RunnableCrobotsThread implements Runnable {
             boolean ok;
             do {
                 if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-                    logger.warn("Kill reached! " + sharedVariables.getKillFile() + " found!");
+                    logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
                     sharedVariables.setRunnable(false);
                 } else if (sharedVariables.isRunnable()) {
                     if (!sharedVariables.isInputBufferEmpty()) {
@@ -75,7 +76,7 @@ public class RunnableCrobotsThread implements Runnable {
                                 try {
                                     outCmd = manager.cmdExec(in.toString().trim());
                                 } catch (Exception e) {
-                                    logger.error("", e);
+                                    logger.log(Level.SEVERE, "RunnableCrobotsThread {0}", e);
                                 }
                                 if (outCmd != null && outCmd.length == tableName.getNumOfOpponents()) {
 
@@ -96,7 +97,7 @@ public class RunnableCrobotsThread implements Runnable {
                                                         Integer.parseInt(cmdString.substring(58, 68).trim())));
                                                 ok = true;
                                             } catch (Exception e) {
-                                                logger.error("", e);
+                                                logger.log(Level.SEVERE,"RunnableCrobotsThread {0}", e);
                                                 ok = false;
                                                 break;
                                             }
@@ -108,23 +109,23 @@ public class RunnableCrobotsThread implements Runnable {
                                     if (ok) {
                                         sharedVariables.addToGames(calculatedBean);
                                     } else {
-                                        logger.error("Calculating " + bean.toString());
-                                        logger.warn("Retry " + tableName + " id=" + bean.getId());
+                                        logger.severe("Calculating " + bean.toString());
+                                        logger.warning("Retry " + tableName + " id=" + bean.getId());
                                         bean.setAction("match");
                                         sharedVariables.addToBuffer(bean);
                                     }
                                 } else {
-                                    logger.error("Calculating " + bean.toString());
-                                    logger.warn("Retry " + tableName + " id=" + bean.getId());
+                                    logger.severe("Calculating " + bean.toString());
+                                    logger.warning("Retry " + tableName + " id=" + bean.getId());
                                     bean.setAction("match");
                                     sharedVariables.addToBuffer(bean);
                                 }
                             } else {
-                                logger.error("Malformed bean " + bean.toString());
+                                logger.severe("Malformed bean " + bean.toString());
                             }
                         }
                     } else {
-                        logger.debug("Im going to sleep for " + sharedVariables.getMainSleepInterval()
+                        logger.fine("Im going to sleep for " + sharedVariables.getMainSleepInterval()
                                 + " ms...");
                         try {
                             Thread.sleep(sharedVariables.getMainSleepInterval());
@@ -157,7 +158,7 @@ public class RunnableCrobotsThread implements Runnable {
             }
             sharedVariables.setActiveThreads((Integer) (sharedVariables.getActiveThreads() - 1));
         } catch (InterruptedException exception) {
-            logger.error("", exception);
+            logger.log(Level.SEVERE,"RunnableCrobotsThread {0}", exception);
             sharedVariables.setActiveThreads((Integer) (sharedVariables.getActiveThreads() - 1));
         }
     }
