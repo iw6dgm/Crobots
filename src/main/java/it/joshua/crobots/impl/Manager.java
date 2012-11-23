@@ -6,11 +6,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
-import org.apache.log4j.Logger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Manager {
 
-    private static Logger logger = Logger.getLogger(Manager.class);
+    private static final Logger logger = Logger.getLogger(Manager.class.getName());
     private MessageDigest md = null;
     private Runtime shellCrobots = null;
     private final int bufferSize;
@@ -25,7 +26,7 @@ public class Manager {
             shellCrobots = Runtime.getRuntime();
             bufferSize = builder.getBufferSize();
         } catch (Exception e1) {
-            logger.error("", e1);
+            logger.log(Level.SEVERE, "Manager {0}", e1);
             throw new RuntimeException(e1);
         }
     }
@@ -67,7 +68,7 @@ public class Manager {
             }
         } catch (UnsupportedEncodingException e1) {
             // TODO Auto-generated catch block
-            logger.error("", e1);
+            logger.log(Level.SEVERE,"Manager {0}", e1);
         }
 
 
@@ -88,7 +89,7 @@ public class Manager {
 
             if ((cmdline != null) && (cmdline.length() > 0)) {
 
-                logger.debug(cmdline);
+                logger.fine(cmdline);
 
                 Process p = shellCrobots.exec(cmdline);
                 p.waitFor();
@@ -108,7 +109,7 @@ public class Manager {
 
             return null;
         } catch (IOException | InterruptedException err) {
-            logger.error("", err);
+            logger.log(Level.SEVERE,"Manager {0}", err);
             return null;
         }
     }

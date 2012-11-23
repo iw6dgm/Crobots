@@ -2,12 +2,13 @@ package it.joshua.crobots.http.obsolete;
 
 import it.joshua.crobots.SharedVariables;
 import java.io.IOException;
-import org.apache.log4j.Logger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Deprecated
 public class RunHTTPQueryManager implements Runnable {
 
-    private Logger logger = Logger.getLogger(RunHTTPQueryManager.class);
+    private static final Logger logger = Logger.getLogger(RunHTTPQueryManager.class.getName());
     private static SharedVariables sharedVariables = SharedVariables.getInstance();
 
     @Override
@@ -20,7 +21,7 @@ public class RunHTTPQueryManager implements Runnable {
         sharedVariables.setRunnable(true);
         while (sharedVariables.isRunnable()) {
             if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-                logger.warn("Kill reached! " + sharedVariables.getKillFile() + " found!");
+                logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
                 //bufferNotEmpty=false;
                 sharedVariables.setRunnable(false);
                 //break;
@@ -37,19 +38,19 @@ public class RunHTTPQueryManager implements Runnable {
                 try {
                     query = httpc.doQuery(url);
                 } catch (IOException e) {
-                    logger.error("", e);
+                    logger.log(Level.SEVERE, "RunHTTPQueryManager {0}", e);
                 }
 
                 if (!"ok".equals(query)) {
-                    logger.error(query);
-                    logger.error("SKIP: " + url);
+                    logger.severe(query);
+                    logger.severe("SKIP: " + url);
                     synchronized (sharedVariables.getHttpURLs()) {
                         sharedVariables.getHttpURLs().add(url);
                     }
                 }
 
                 if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-                    logger.warn("Kill reached! " + sharedVariables.getKillFile() + " found!");
+                    logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
                     bufferNotEmpty = false;
                     sharedVariables.setRunnable(false);
                     break;

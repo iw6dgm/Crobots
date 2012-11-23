@@ -27,13 +27,14 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.log4j.Logger;
 
 public class SQLManager implements SQLManagerInterface {
 
-    private static Logger logger = Logger.getLogger(SQLManager.class);
+    private static final Logger logger = Logger.getLogger(SQLManager.class.getName());
     protected static DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
     //private CallableStatement cs2  = null;
     protected CallableStatement callableStatement = null;
@@ -112,7 +113,7 @@ public class SQLManager implements SQLManagerInterface {
                     ps.executeUpdate();
                     ok++;
                 } catch (SQLException e) {
-                    logger.warn("Name = " + robot + " - " + e.getMessage());
+                    logger.warning("Name = " + robot + " - " + e.getMessage());
                     failure++;
                 }
                 if (!dataSourceManager.getLocalDataSource().getDefaultAutoCommit()) {
@@ -120,7 +121,7 @@ public class SQLManager implements SQLManagerInterface {
                 }
             }
         } catch (Exception e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
         } finally {
             close(ps);
             close(c);
@@ -147,7 +148,7 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.error("", e);
+            logger.log(Level.SEVERE,"SQLManager {0}", e);
         } finally {
             close(cs);
             close(c);
@@ -164,7 +165,7 @@ public class SQLManager implements SQLManagerInterface {
             cs = c.prepareCall("{CALL pSetupResults" + tableName.getTableName().toUpperCase() + "()}");
             cs.execute();
         } catch (Exception e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE,"SQLManager {0}", e);
         } finally {
             close(cs);
             close(c);
@@ -204,7 +205,7 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.error("", e);
+            logger.log(Level.SEVERE,"SQLManager {0}", e);
         } finally {
             close(cs);
             close(c);
@@ -226,7 +227,7 @@ public class SQLManager implements SQLManagerInterface {
                 c.commit();
             }
         } catch (Exception e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE,"SQLManager {0}", e);
         } finally {
             close(ps);
             close(c);
@@ -247,7 +248,7 @@ public class SQLManager implements SQLManagerInterface {
             cs.execute();
             logger.info("Test at " + cs.getTimestamp(1));
         } catch (Exception e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE,"SQLManager {0}", e);
             result = false;
         } finally {
             close(cs);
@@ -259,16 +260,16 @@ public class SQLManager implements SQLManagerInterface {
     @Override
     public boolean initializeUpdates() {
         boolean result = true;
-        logger.debug("Start initialize Callables...");
+        logger.fine("Start initialize Callables...");
         try {
             remoteC = getConnection(false);
             remoteC.setAutoCommit(sharedVariables.isRemoteAutocommit());
             callableStatement = remoteC.prepareCall(sqlUpdateResults.toString());
         } catch (Exception e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE,"SQLManager {0}", e);
             result = false;
         }
-        logger.debug("Initialize completed...");
+        logger.fine("Initialize completed...");
         return result;
     }
 
@@ -278,7 +279,7 @@ public class SQLManager implements SQLManagerInterface {
         close(callableStatement);
         //close(localC);
         close(remoteC);
-        logger.debug("Release completed...");
+        logger.fine("Release completed...");
     }
 
     public static void closeAll() {
@@ -286,7 +287,7 @@ public class SQLManager implements SQLManagerInterface {
             closeConnection(dataSourceManager.getLocalDataSource());
             closeConnection(dataSourceManager.getRemoteDataSource());
         } catch (Exception e) {
-            //logger.error("",e); botta silente
+            //logger.log(Level.SEVERE,"SQLManager {0}",e); botta silente
         }
     }
 
@@ -363,7 +364,7 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.error("", e);
+            logger.log(Level.SEVERE,"SQLManager {0}", e);
         } finally {
             close(cs4);
             close(c);
@@ -400,7 +401,7 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.error("", e);
+            logger.log(Level.SEVERE,"SQLManager {0}", e);
             result = false;
         }
         return result;
@@ -448,7 +449,7 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.error("", e);
+            logger.log(Level.SEVERE,"SQLManager {0}", e);
         } finally {
             close(rs);
             close(cs);

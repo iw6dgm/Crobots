@@ -10,10 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.SynchronousQueue;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jconfig.Configuration;
 import org.jconfig.ConfigurationManager;
 import org.jconfig.handler.XMLFileHandler;
@@ -29,7 +27,7 @@ public class SharedVariables {
      */
     private static SharedVariables instance = new SharedVariables();
     private static Configuration configuration = ConfigurationManager.getConfiguration("Crobots");
-    private static final Logger logger = Logger.getLogger(SharedVariables.class.getName());
+    private static Logger logger;
 
     public int getBigBuffer() {
         return bigBuffer;
@@ -298,9 +296,7 @@ public class SharedVariables {
      * Singleton init
      */
     private SharedVariables() {
-        BasicConfigurator.configure();
-        PropertyConfigurator.configure("log4j.properties");
-
+        logger = Logger.getLogger(SharedVariables.class.getName());
         if (configuration==null || configuration.isNew()) {
             try {
                 File file = new File("Crobots_config.xml");
@@ -310,11 +306,11 @@ public class SharedVariables {
                 configMgr.load(handler, "Crobots");
                 configuration = ConfigurationManager.getConfiguration("Crobots");
                 if (configuration.isNew()) {
-                    logger.error("Configuration has not been correctly loaded!");
+                    logger.severe("Configuration has not been correctly loaded!");
                     System.exit(-1);
                 }
             } catch (Exception e) {
-                logger.error("", e);
+                logger.log(Level.SEVERE,"SharedVariables init {0}", e);
                 System.exit(-1);
             }
         }
@@ -364,12 +360,12 @@ public class SharedVariables {
 
         if (threads > CONST.MAX_THREADS) {
             logger
-                    .warn("Max threads exceeded. Set to "
+                    .warning("Max threads exceeded. Set to "
                     + CONST.MAX_THREADS);
         }
 
         if (threads < 1) {
-            logger.warn("Min threads exceeded. Set to 1");
+            logger.warning("Min threads exceeded. Set to 1");
         }
 
         threadNumber = java.lang.Math.min(threads, CONST.MAX_THREADS);
@@ -441,12 +437,12 @@ public class SharedVariables {
                         int threads = Integer.parseInt(args[i + 1]);
 
                         if (threads > CONST.MAX_THREADS) {
-                            logger.warn("Max threads exeeded. Set to "
+                            logger.warning("Max threads exeeded. Set to "
                                     + CONST.MAX_THREADS);
                         }
 
                         if (threads < 1) {
-                            logger.warn("Min threads exeeded. Set to 1");
+                            logger.warning("Min threads exeeded. Set to 1");
                         }
 
                         threadNumber = java.lang.Math.min(threads,
@@ -454,7 +450,7 @@ public class SharedVariables {
                         threadNumber = java.lang.Math.max(threads, 1);
 
                     } catch (NumberFormatException e) {
-                        logger.error("Bad input parameter");
+                        logger.severe("Bad input parameter");
                         printUsage = true;
                     }
                 }
@@ -464,14 +460,14 @@ public class SharedVariables {
                         timeLimitMinutes = Integer.parseInt(args[i + 1]);
                         timeLimit = true;
                     } catch (NumberFormatException e) {
-                        logger.error("Bad input parameter");
+                        logger.severe("Bad input parameter");
                         printUsage = true;
                     }
                 }
 
                 if (paramStr == 't') {
                     onlyTest = true;
-                    logger.setLevel(Level.DEBUG);
+                    logger.setLevel(Level.ALL);
                 }
                 if (paramStr == 'q') {
                     logger.setLevel(Level.INFO);

@@ -8,12 +8,13 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import oracle.jdbc.internal.OracleTypes;
-import org.apache.log4j.Logger;
 
 public class SQLManagerOracle extends SQLManager {
 
-	private static Logger logger = Logger.getLogger(SQLManagerOracle.class);
+	private static final Logger logger = Logger.getLogger(SQLManagerOracle.class.getName());
 	private TableName tableName;
 
 	private SQLManagerOracle(TableName tableName) {
@@ -55,7 +56,7 @@ public class SQLManagerOracle extends SQLManager {
 		}
 		catch(Exception e)
 		{
-			logger.error("", e);
+			logger.log(Level.SEVERE, "SQLManagerOracle {0}", e);
 		}
 		finally
 		{

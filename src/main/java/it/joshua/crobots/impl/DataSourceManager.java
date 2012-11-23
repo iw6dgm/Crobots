@@ -6,8 +6,9 @@ package it.joshua.crobots.impl;
 
 import it.joshua.crobots.DataSourceManagerInterface;
 import it.joshua.crobots.SharedVariables;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.log4j.Logger;
 
 /**
  *
@@ -16,10 +17,11 @@ import org.apache.log4j.Logger;
 public class DataSourceManager implements DataSourceManagerInterface {
 
     private static SharedVariables sharedVariables = SharedVariables.getInstance();
-    private static Logger logger = Logger.getLogger(DataSourceManager.class);
+    private static Logger logger;
     private static BasicDataSource localDataSource, remoteDataSource;
 
-    private DataSourceManager() {    
+    private DataSourceManager() {
+        logger = Logger.getLogger(DataSourceManager.class.getName());
     }
 
     private static class Container {
@@ -37,7 +39,7 @@ public class DataSourceManager implements DataSourceManagerInterface {
                 localDataSource = remoteDataSource;
             }
         } catch (Exception e) {
-            logger.fatal(e);
+            logger.log(Level.SEVERE, "DataSourceManager initialize {0}", e);
         }
     }
 
@@ -77,7 +79,7 @@ public class DataSourceManager implements DataSourceManagerInterface {
                 ds.setDefaultAutoCommit(sharedVariables.isRemoteAutocommit());
             }
         } catch (Exception e) {
-            logger.error("", e);
+            logger.log(Level.SEVERE, "DataSourceManager getConnection {0}", e);
             throw e;
         }
         return ds;
