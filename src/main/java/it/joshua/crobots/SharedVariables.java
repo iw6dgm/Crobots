@@ -318,8 +318,8 @@ public class SharedVariables {
         hostName = configuration.getProperty("hostname", CONST.HTTP_SITE_URL, "HTTPClient");
         userName = configuration.getProperty("username", "crobots", "HTTPClient");
         passWord = configuration.getProperty("pwd", "test", "HTTPClient");
-        fileInput = configuration.getProperty("fileinput", "torneo.dat", "Tournament");
-        path = configuration.getProperty("path", "C:\\crobots", "Tournament");
+        fileInput = configuration.getProperty("fileinput", CONST.DATA_FILE, "Tournament");
+        path = configuration.getProperty("path", CONST.CMD_PATH, "Tournament");
         cmdScript = configuration.getProperty("cmdscript", CONST.CMD_SCRIPT, "Application");
         onlyTest = configuration.getBooleanProperty("onlytest", false, "Application");
         localDb = configuration.getBooleanProperty("localdb", false, "Application");
@@ -344,13 +344,13 @@ public class SharedVariables {
         timeout = configuration.getIntProperty("timeout", 12, "Application");
         kill = configuration.getBooleanProperty("killfile", true, "Application");
 
-        remoteJdbc = configuration.getProperty("jdbc", "jdbc:mysql://127.0.01:3306/crobots?user=crobots&password=", "RemoteDatabase");
-        remoteDriver = configuration.getProperty("driver", "com.mysql.jdbc.Driver", "RemoteDatabase");
+        remoteJdbc = configuration.getProperty("jdbc", CONST.JDBC, "RemoteDatabase");
+        remoteDriver = configuration.getProperty("driver", CONST.DRIVER, "RemoteDatabase");
         remoteUser = configuration.getProperty("user", "crobots", "RemoteDatabase");
         remotePwd = configuration.getProperty("pwd", "test", "RemoteDatabase");
         remoteAutocommit = configuration.getBooleanProperty("autocommit", true, "RemoteDatabase");
-        localJdbc = configuration.getProperty("jdbc", "jdbc:mysql://127.0.01:3306/crobots?user=crobots&password=", "LocalDatabase");
-        localDriver = configuration.getProperty("driver", "com.mysql.jdbc.Driver", "LocalDatabase");
+        localJdbc = configuration.getProperty("jdbc", CONST.JDBC, "LocalDatabase");
+        localDriver = configuration.getProperty("driver", CONST.DRIVER, "LocalDatabase");
         localUser = configuration.getProperty("user", "crobots", "LocalDatabase");
         localPwd = configuration.getProperty("pwd", "test", "LocalDatabase");
         localAutocommit = configuration.getBooleanProperty("autocommit", true, "LocalDatabase");
