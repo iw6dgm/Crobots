@@ -315,12 +315,12 @@ public class SharedVariables {
             }
         }
 
-        hostName = configuration.getProperty("hostname", "http://localhost/crobots/sql", "HTTPClient");
+        hostName = configuration.getProperty("hostname", CONST.HTTP_SITE_URL, "HTTPClient");
         userName = configuration.getProperty("username", "crobots", "HTTPClient");
         passWord = configuration.getProperty("pwd", "test", "HTTPClient");
         fileInput = configuration.getProperty("fileinput", "torneo.dat", "Tournament");
         path = configuration.getProperty("path", "C:\\crobots", "Tournament");
-        cmdScript = configuration.getProperty("cmdscript", "crobots.bat", "Application");
+        cmdScript = configuration.getProperty("cmdscript", CONST.CMD_SCRIPT, "Application");
         onlyTest = configuration.getBooleanProperty("onlytest", false, "Application");
         localDb = configuration.getBooleanProperty("localdb", false, "Application");
         mainSleepInterval = configuration.getIntProperty("mainSleepInterval", 1000, "Application");
