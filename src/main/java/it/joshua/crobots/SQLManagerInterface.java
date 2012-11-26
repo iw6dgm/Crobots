@@ -9,8 +9,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Vector;
-import javax.sql.DataSource;
-import org.apache.commons.dbcp.BasicDataSource;
 
 /**
  *
