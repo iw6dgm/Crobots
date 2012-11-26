@@ -1,14 +1,14 @@
 package it.joshua.crobots;
 
-import it.joshua.crobots.http.obsolete.RunHTTP;
-import it.joshua.crobots.http.obsolete.HTTPClient;
-import it.joshua.crobots.http.obsolete.RunHTTPQueryManager;
 import it.joshua.crobots.bean.GamesBean;
 import it.joshua.crobots.bean.RobotGameBean;
 import it.joshua.crobots.data.TableName;
+import it.joshua.crobots.http.obsolete.HTTPClient;
+import it.joshua.crobots.http.obsolete.RunHTTP;
+import it.joshua.crobots.http.obsolete.RunHTTPQueryManager;
 import it.joshua.crobots.impl.Manager;
-import it.joshua.crobots.impl.RunnableCrobotsThread;
 import it.joshua.crobots.impl.RunnableCrobotsManager;
+import it.joshua.crobots.impl.RunnableCrobotsThread;
 import it.joshua.crobots.impl.SQLManager;
 import it.joshua.crobots.xml.Match;
 import it.joshua.crobots.xml.MatchList;
@@ -39,7 +39,7 @@ import javax.xml.bind.Unmarshaller;
  * @name     Crobots
  * @version  4.6
  * @buid     95
- * @revision 02-feb-2012
+ * @revision 22-Nov-2012
  * 
  * Window - Preferences - Java - Code Style - Code Templates
  */

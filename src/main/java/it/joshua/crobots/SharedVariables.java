@@ -15,9 +15,16 @@ import java.util.logging.Logger;
 import org.jconfig.Configuration;
 import org.jconfig.ConfigurationManager;
 import org.jconfig.handler.XMLFileHandler;
-
+/**
+ * @author joshua
+ * 
+ * Shared variables across classes and threads
+ * 
+ */
 public class SharedVariables {
-
+    /**
+     * Main singleton & utilities classes
+     */
     private static SharedVariables instance = new SharedVariables();
     private static Configuration configuration = ConfigurationManager.getConfiguration("Crobots");
     private static Logger logger;
@@ -116,14 +123,6 @@ public class SharedVariables {
 
     public void setVerbose(boolean aVerbose) {
         verbose = aVerbose;
-    }
-
-    public boolean isTest() {
-        return test;
-    }
-
-    public void setTest(boolean aTest) {
-        test = aTest;
     }
 
     public boolean isSetupMode() {
@@ -293,7 +292,9 @@ public class SharedVariables {
     public void setKillfile(File aKillfile) {
         killfile = aKillfile;
     }
-
+    /**
+     * Singleton init
+     */
     private SharedVariables() {
         logger = Logger.getLogger(SharedVariables.class.getName());
         if (configuration==null || configuration.isNew()) {
@@ -314,12 +315,12 @@ public class SharedVariables {
             }
         }
 
-        hostName = configuration.getProperty("hostname", "http://localhost/crobots/sql", "HTTPClient");
+        hostName = configuration.getProperty("hostname", CONST.HTTP_SITE_URL, "HTTPClient");
         userName = configuration.getProperty("username", "crobots", "HTTPClient");
         passWord = configuration.getProperty("pwd", "test", "HTTPClient");
-        fileInput = configuration.getProperty("fileinput", "torneo.dat", "Tournament");
-        path = configuration.getProperty("path", "C:\\crobots", "Tournament");
-        cmdScript = configuration.getProperty("cmdscript", "crobots.bat", "Application");
+        fileInput = configuration.getProperty("fileinput", CONST.DATA_FILE, "Tournament");
+        path = configuration.getProperty("path", CONST.CMD_PATH, "Tournament");
+        cmdScript = configuration.getProperty("cmdscript", CONST.CMD_SCRIPT, "Application");
         onlyTest = configuration.getBooleanProperty("onlytest", false, "Application");
         localDb = configuration.getBooleanProperty("localdb", false, "Application");
         mainSleepInterval = configuration.getIntProperty("mainSleepInterval", 1000, "Application");
@@ -343,13 +344,13 @@ public class SharedVariables {
         timeout = configuration.getIntProperty("timeout", 12, "Application");
         kill = configuration.getBooleanProperty("killfile", true, "Application");
 
-        remoteJdbc = configuration.getProperty("jdbc", "jdbc:mysql://127.0.01:3306/crobots?user=crobots&password=", "RemoteDatabase");
-        remoteDriver = configuration.getProperty("driver", "com.mysql.jdbc.Driver", "RemoteDatabase");
+        remoteJdbc = configuration.getProperty("jdbc", CONST.JDBC, "RemoteDatabase");
+        remoteDriver = configuration.getProperty("driver", CONST.DRIVER, "RemoteDatabase");
         remoteUser = configuration.getProperty("user", "crobots", "RemoteDatabase");
         remotePwd = configuration.getProperty("pwd", "test", "RemoteDatabase");
         remoteAutocommit = configuration.getBooleanProperty("autocommit", true, "RemoteDatabase");
-        localJdbc = configuration.getProperty("jdbc", "jdbc:mysql://127.0.01:3306/crobots?user=crobots&password=", "LocalDatabase");
-        localDriver = configuration.getProperty("driver", "com.mysql.jdbc.Driver", "LocalDatabase");
+        localJdbc = configuration.getProperty("jdbc", CONST.JDBC, "LocalDatabase");
+        localDriver = configuration.getProperty("driver", CONST.DRIVER, "LocalDatabase");
         localUser = configuration.getProperty("user", "crobots", "LocalDatabase");
         localPwd = configuration.getProperty("pwd", "test", "LocalDatabase");
         localAutocommit = configuration.getBooleanProperty("autocommit", true, "LocalDatabase");
@@ -392,7 +393,11 @@ public class SharedVariables {
     public int getNumOfMatch(TableName tableName) {
         return numOfMatch.get(tableName);
     }
-
+    /**
+     * @param args 
+     * 
+     * Takes command line parameters and ends up the application configuration
+     */
     public void setup(String args[]) {
         int l = args.length;
 
@@ -506,33 +511,63 @@ public class SharedVariables {
     public static SharedVariables getInstance() {
         return instance;
     }
+    /**
+     * Back-end business logic & threads configuration
+     */
+    // Thread sleep interval for each match modality
     private Map<TableName, Integer> sleepInterval = new HashMap<>();
-    private Map<TableName, Integer> numOfMatch = new HashMap<>();
-    private int bigBuffer = 10;
-    private int bufferSize = 4;
-    //static Connection connection 		= null;
-    private Vector<String> httpURLs;
-    private AbstractQueue<GamesBean> games = new SynchronousQueue<>();
-    private AbstractQueue<GamesBean> buffer = new SynchronousQueue<>();
-    private volatile boolean runnable = true;
-    private int timeout = 12;
+    // Master thread sleep interval
     private Integer mainSleepInterval = 1000; // Default 1 s
-    private volatile Integer activeThreads;
-    private boolean emptyBuffer = false;
-    private boolean allRounds = true;
-    private boolean onlyF2F = false;
-    private boolean only3vs3 = false;
-    private boolean only4vs4 = false;
-    private boolean onlyTest = false;
-    private boolean verbose = true;
-    private boolean test = false;
-    private boolean setupMode = false;
-    private boolean initMode = false;
-    private boolean printUsage = false;
+    // Number of each Crobots match factor repetition
+    private Map<TableName, Integer> numOfMatch = new HashMap<>();
+    // Number of matches retreived from the database for each call
+    private int bigBuffer = 10;
+    // Number of match to cache into the buffer collection
+    private int bufferSize = 4;
+    // If set, the application switches to the HTTP modality
+    @Deprecated
     private boolean HTTPMode = false;
+    @Deprecated
+    private Vector<String> httpURLs;
+    @Deprecated
+    private String userName = "crobots";
+    @Deprecated
+    private String passWord = "";
+    // Calculated games, ready to be saved into the database
+    private AbstractQueue<GamesBean> games = new SynchronousQueue<>();
+    // Uncalculated games, retreived from the database
+    private AbstractQueue<GamesBean> buffer = new SynchronousQueue<>();
+    // Application running flag
+    private volatile boolean runnable = true;
+    // Timeout for threads
+    private int timeout = 12;
+    // Number of active and running slave threads
+    private volatile Integer activeThreads;
+    // If set, it forces the completion of previously suspended already-calculated matches
+    private boolean emptyBuffer = false;
+    // If set, any match modality (2, 3 and 4 simultaneously robots) will run
+    private boolean allRounds = true;
+    // If set, only the face2face (2 simultaneously robots) modality will run
+    private boolean onlyF2F = false;
+    // If set, only the 3vs3 (3 simultaneously robots) modality will run
+    private boolean only3vs3 = false;
+    // If set, only the 4vs4 (4 simultaneously robots) modality will run
+    private boolean only4vs4 = false;
+    // If set, it tests robot into binary compilation and database connections
+    private boolean onlyTest = false;
+    // If set, it switch on the logger debug level
+    private boolean verbose = true;
+    // If set, it forces the database-driven matches setup
+    private boolean setupMode = false;
+    // If set, it forces the database-driven robots setup
+    private boolean initMode = false;
+    // If set, it forces the print usage visualization
+    private boolean printUsage = false;
+    // If set, the application uses a secondary (local) database for any match combination
     private boolean localDb = false;
+    // If set, the application stops its execution if the timeout has benn exceeded
     private boolean timeLimit = false;
-    //public static int mGroup        	= 10;
+    // Number or simultaneously running slave threads (match calculation)
     private int threadNumber = 2;
     private int bufferMinSize = 10;
     private long timeLimitMinutes = 0;
@@ -541,12 +576,17 @@ public class SharedVariables {
     private String fileInput = "torneo.dat";
     private String path = "./torneo";
     private String cmdScript = "crobots.sh";
-    private String userName = "crobots";
-    private String passWord = "";
+    // Operating system (Windows, UNIX)
     private String osType = "UNIX";
+    // Directory separator
     private char delimit = File.separatorChar;
+    // Stop file: if exists it stops the run
     private String killFile = "Crobots.stop";
-    //Database
+    private boolean kill = false;
+    private File killfile = new File(killFile);
+    /**
+     * Database configuration
+     */
     private final String remoteDriver;
     private final String localDriver;
     private final String remoteJdbc;
@@ -557,8 +597,6 @@ public class SharedVariables {
     private final String remotePwd;
     private final boolean remoteAutocommit;
     private final boolean localAutocommit;
-    private boolean kill = false;
-    private File killfile = new File(killFile);
 
     public synchronized boolean isGameBufferEmpty() {
         return games.isEmpty();
