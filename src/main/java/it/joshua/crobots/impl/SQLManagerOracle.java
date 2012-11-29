@@ -23,7 +23,7 @@ public class SQLManagerOracle extends SQLManager {
 	}
 
 	@Override
-	public List<GamesBean> getGames()
+	public List<GamesBean> getGamesFromDB()
 	{
 		Connection         c   = null;
 		CallableStatement cs   = null;
@@ -45,7 +45,7 @@ public class SQLManagerOracle extends SQLManager {
 				int n = tableName.getNumOfOpponents()+1;
 				for(int i=2;i<=n;i++)
 				{
-					game.getRobots().add(RobotGameBean.create(rs.getString(i)));
+					game.getRobots().add(new RobotGameBean.Builder(rs.getString(i)).build());
 				}
 				result.add(game);
 			}

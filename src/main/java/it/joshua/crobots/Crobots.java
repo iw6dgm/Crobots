@@ -23,6 +23,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,9 +38,9 @@ import javax.xml.bind.Unmarshaller;
  * Created on 13-lug-2006
  *
  * @name     Crobots
- * @version  4.6
- * @buid     95
- * @revision 22-Nov-2012
+ * @version  4.61
+ * @buid     96
+ * @revision 29-Nov-2012
  * 
  * Window - Preferences - Java - Code Style - Code Templates
  */
@@ -51,9 +52,9 @@ import javax.xml.bind.Unmarshaller;
  */
 public class Crobots {
 
-    private static int BUILD = 95;
-    private static String VERSION = "Crobots Java Tournament Manager v.4.6 (build " + BUILD + ") - 22/Nov/2012 - (C) Maurizio Camangi";
-    static Vector<String> robots;
+    private static int BUILD = 96;
+    private static String VERSION = "Crobots Java Tournament Manager v.4.61 (build " + BUILD + ") - 29/Nov/2012 - (C) Maurizio Camangi";
+    private static final List<String> robots = new ArrayList<>();
     private static final Logger logger = Logger.getLogger(Crobots.class.getName());
     private static SharedVariables sharedVariables;
 
@@ -144,13 +145,11 @@ public class Crobots {
                 logger.log(Level.SEVERE, "Crobots {0}", e);
             }
             GamesBean gb;
-            RobotGameBean rg;
             if (ml != null && ml.getMatch().size() > 0) {
                 for (Match match : ml.getMatch()) {
                     gb = new GamesBean.Builder(match).build();
                     for (Robot robot : match.getRobots().getRobot()) {
-                        rg = RobotGameBean.create(robot.getName(), robot.getWin(), robot.getTie(), robot.getPoints());
-                        gb.getRobots().add(rg);
+                        gb.getRobots().add(new RobotGameBean.Builder(robot.getName()).setWin(robot.getWin()).setTie(robot.getTie()).setPoints(robot.getPoints()).build());
                     }
                     sharedVariables.addToGames(gb);
                 }
@@ -235,7 +234,7 @@ public class Crobots {
             }
         }
 
-        if (!sharedVariables.isGameBufferEmpty()) {
+        if (!sharedVariables.isGamesEmpty()) {
             logger.warning("Game buffer size not empty : " + sharedVariables.getGamesSize());
             if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
                 logger.warning("Crobots.backup.xml file creation forced");
@@ -353,29 +352,26 @@ public class Crobots {
             logger.info("Threads gonna be stopped");
         }
 
-        if (!sharedVariables.isGameBufferEmpty()) {
+        if (!sharedVariables.isGamesEmpty()) {
             flushGameBuffer();
         }
     }
 
     static private void inputFileReader() {
 
-        robots = new Vector<String>();
-
         logger.info("Loading robots...");
         try {
-            BufferedReader input = new BufferedReader(new FileReader(
-                    sharedVariables.getFileInput()));
-
-            String robot = input.readLine();
-            logger.fine(robot);
-            robots.add(robot);
-            while (input.ready()) {
-                robot = input.readLine();
-                robots.add(robot);
+            try (BufferedReader input = new BufferedReader(new FileReader(
+                            sharedVariables.getFileInput()))) {
+                String robot = input.readLine();
                 logger.fine(robot);
+                robots.add(robot);
+                while (input.ready()) {
+                    robot = input.readLine();
+                    robots.add(robot);
+                    logger.fine(robot);
+                }
             }
-            input.close();
 
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Crobots {0}", e);
@@ -395,7 +391,6 @@ public class Crobots {
                 logger.warning("Kill reached! Crobots.stop found!");
                 break;
             }
-            gb = sharedVariables.getAndRemoveBean();
             switch (gb.getAction()) {
                 case "update":
                     if ("f2f".equals(gb.getTableName())) {
@@ -516,6 +511,7 @@ public class Crobots {
         SQLManager.initialize();
 
         mySQLManager.setupTable();
+        mySQLManager.setupResults();
 
         SQLManager.closeAll();
     }

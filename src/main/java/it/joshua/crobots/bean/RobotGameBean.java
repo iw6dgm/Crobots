@@ -1,14 +1,10 @@
 package it.joshua.crobots.bean;
 
 import java.io.Serializable;
-import java.lang.ref.WeakReference;
-import java.util.WeakHashMap;
 
 public class RobotGameBean implements Serializable {
 
     private static final long serialVersionUID = 7391478408065757891L;
-    private static final WeakHashMap<RobotGameBean, WeakReference<RobotGameBean>> flyweightData =
-            new WeakHashMap<>();
     private final String robot;
     private Integer win;
     private Integer tie;
@@ -18,35 +14,45 @@ public class RobotGameBean implements Serializable {
         return robot;
     }
 
-    private RobotGameBean(String robot, Integer win, Integer tie, Integer points) {
+    private RobotGameBean(Builder builder) {
         super();
-        this.robot = robot;
-        this.win = win;
-        this.tie = tie;
-        this.points = points;
-    }
-
-    private RobotGameBean(String robot) {
-        super();
-        this.robot = robot;
+        this.robot = builder.robot;
+        this.win = builder.win;
+        this.tie = builder.tie;
+        this.points = builder.points;
     }
     
-    public static RobotGameBean create(String robot) {
-        RobotGameBean bean = new RobotGameBean(robot);
-        if (!flyweightData.containsKey(bean)) {
-            flyweightData.put(bean, new WeakReference(bean));
+    public static class Builder implements it.joshua.crobots.Builder<RobotGameBean> {
+        
+        private final String robot;
+        private Integer win, tie, points;
+        
+        public Builder setWin(Integer win) {
+            this.win = win;
+            return this;
         }
-        return flyweightData.get(bean).get();
-    }
-    
-    public static RobotGameBean create(String robot, Integer win, Integer tie, Integer points) {
-        RobotGameBean bean = new RobotGameBean(robot, win, tie, points);
-        if (!flyweightData.containsKey(bean)) {
-            flyweightData.put(bean, new WeakReference(bean));
+        
+        public Builder setTie(Integer tie) {
+            this.tie = tie;
+            return this;
         }
-        return flyweightData.get(bean).get();
+        
+        public Builder setPoints(Integer points) {
+            this.points = points;
+            return this;
+        }
+        
+        public Builder(String robot) {
+            this.robot = robot;
+        }
+        
+        @Override
+        public RobotGameBean build() {
+            return new RobotGameBean(this);
+        }
+        
     }
-
+        
     public void setWin(Integer win) {
         this.win = win;
     }

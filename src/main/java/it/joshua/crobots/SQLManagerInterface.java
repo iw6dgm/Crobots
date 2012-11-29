@@ -8,7 +8,6 @@ import it.joshua.crobots.bean.GamesBean;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Vector;
 
 /**
  *
@@ -18,13 +17,13 @@ public interface SQLManagerInterface {
 
     public Connection getConnection(boolean localDb) throws SQLException;
 
-    public void initializeRobots(Vector<String> robots);
+    public void initializeRobots(List<String> robots);
 
     public void setupTable();
 
     public void setupResults();
 
-    public void setupRobots(Vector<String> robots, boolean localDb);
+    public void setupRobots(List<String> robots, boolean localDb);
 
     public void setupParameters(int param);
 
@@ -38,5 +37,5 @@ public interface SQLManagerInterface {
 
     public boolean updateResults(GamesBean bean);
 
-    public List<GamesBean> getGames();
+    public List<GamesBean> getGamesFromDB();
 }

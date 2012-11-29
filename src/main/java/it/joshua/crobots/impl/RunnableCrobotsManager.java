@@ -55,25 +55,25 @@ public class RunnableCrobotsManager implements Runnable {
                     isCompleted = true;
                 }
 
-                if (!isCompleted && sharedVariables.getBufferSize() < sharedVariables.getBufferSize()) {
-                    i = mySQLManager.getGames();
+                if (!isCompleted && sharedVariables.getBufferSize() < sharedVariables.getBufferMinSize()) {
+                    i = mySQLManager.getGamesFromDB();
                     if (i != null && i.size() > 0) {
                         logger.fine("Append " + i.size() + " match(es) to buffer...");
-                        sharedVariables.addAllToGames(i);
+                        sharedVariables.addAllToBuffer(i);
                     } else {
                         isCompleted = true;
                     }
                 }
 
-                logger.fine("isGameBufferEmpty " + sharedVariables.isGameBufferEmpty() + " size " + sharedVariables.getGamesSize());
-                logger.fine("isInputBufferEmpty " + sharedVariables.isInputBufferEmpty() + " size " + sharedVariables.getBufferSize());
+                logger.fine("isGameBufferEmpty " + sharedVariables.isGamesEmpty() + " size " + sharedVariables.getGamesSize());
+                logger.fine("isInputBufferEmpty " + sharedVariables.isBufferEmpty() + " size " + sharedVariables.getBufferSize());
 
-                if (!sharedVariables.isGameBufferEmpty()) {
+                if (!sharedVariables.isGamesEmpty()) {
                     boolean ok = mySQLManager.initializeUpdates();
                     if (ok) {
                         calls++;
-                        while (!sharedVariables.isGameBufferEmpty()) {
-                            bean = sharedVariables.getAndRemoveBean();
+                        while (!sharedVariables.isGamesEmpty()) {
+                            bean = sharedVariables.getFromGames();
                             if ("update".equals(bean.getAction()) && tableName.equals(bean.getTableName())) {
 
                                 if (!mySQLManager.updateResults(bean)) {
@@ -93,12 +93,12 @@ public class RunnableCrobotsManager implements Runnable {
                     }
 
                     mySQLManager.releaseUpdates();
-                } else if (isCompleted && sharedVariables.isInputBufferEmpty()) {
+                } else if (isCompleted && sharedVariables.isBufferEmpty()) {
                     sharedVariables.setRunnable(false);
                     logger.info("Everything is done here...");
                 } else if (sharedVariables.isRunnable()
                         && ((!isCompleted && (sharedVariables.getBufferSize() >= sharedVariables.getBufferMinSize()))
-                        || (isCompleted && !sharedVariables.isInputBufferEmpty()))) {
+                        || (isCompleted && !sharedVariables.isBufferEmpty()))) {
                     logger.fine("Im going to sleep for " + sharedVariables.getSleepInterval(tableName) + " ms...");
                     try {
                         Thread.sleep(sharedVariables.getSleepInterval(tableName));

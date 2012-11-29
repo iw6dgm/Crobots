@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jconfig.Configuration;
@@ -534,9 +534,9 @@ public class SharedVariables {
     @Deprecated
     private String passWord = "";
     // Calculated games, ready to be saved into the database
-    private AbstractQueue<GamesBean> games = new SynchronousQueue<>();
+    private AbstractQueue<GamesBean> games = new ConcurrentLinkedQueue<>();
     // Uncalculated games, retreived from the database
-    private AbstractQueue<GamesBean> buffer = new SynchronousQueue<>();
+    private AbstractQueue<GamesBean> buffer = new ConcurrentLinkedQueue<>();
     // Application running flag
     private volatile boolean runnable = true;
     // Timeout for threads
@@ -598,11 +598,11 @@ public class SharedVariables {
     private final boolean remoteAutocommit;
     private final boolean localAutocommit;
 
-    public synchronized boolean isGameBufferEmpty() {
+    public boolean isGamesEmpty() {
         return games.isEmpty();
     }
 
-    public synchronized boolean isInputBufferEmpty() {
+    public boolean isBufferEmpty() {
         return buffer.isEmpty();
     }
 
@@ -622,7 +622,7 @@ public class SharedVariables {
         return games.size();
     }
 
-    public GamesBean getAndRemoveBean() {
+    public GamesBean getFromGames() {
         return games.remove();
     }
 

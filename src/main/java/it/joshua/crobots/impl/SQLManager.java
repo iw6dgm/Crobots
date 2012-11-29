@@ -97,7 +97,7 @@ public class SQLManager implements SQLManagerInterface {
     }
 
     @Override
-    public void initializeRobots(Vector<String> robots) {
+    public void initializeRobots(List<String> robots) {
         PreparedStatement ps = null;
         Connection c = null;
         String sql = "INSERT INTO robots(name) VALUES(?)";
@@ -148,7 +148,7 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.log(Level.SEVERE,"SQLManager {0}", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
         } finally {
             close(cs);
             close(c);
@@ -164,8 +164,17 @@ public class SQLManager implements SQLManagerInterface {
             c = getConnection(false);
             cs = c.prepareCall("{CALL pSetupResults" + tableName.getTableName().toUpperCase() + "()}");
             cs.execute();
+            if (!sharedVariables.isRemoteAutocommit()) {
+                c.commit();
+            }
         } catch (Exception e) {
-            logger.log(Level.SEVERE,"SQLManager {0}", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
+            if (!sharedVariables.isRemoteAutocommit()) {
+                try {
+                    c.rollback();
+                } catch (SQLException se) {
+                }
+            }
         } finally {
             close(cs);
             close(c);
@@ -173,7 +182,7 @@ public class SQLManager implements SQLManagerInterface {
     }
 
     @Override
-    public void setupRobots(Vector<String> robots, boolean localDb) {
+    public void setupRobots(List<String> robots, boolean localDb) {
         CallableStatement cs = null;
         Connection c = null;
         boolean autoCommit = false;
@@ -205,7 +214,7 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.log(Level.SEVERE,"SQLManager {0}", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
         } finally {
             close(cs);
             close(c);
@@ -216,7 +225,7 @@ public class SQLManager implements SQLManagerInterface {
     public void setupParameters(int param) {
         PreparedStatement ps = null;
         Connection c = null;
-        String sql = "UPDATE parameters SET " + tableName + "=? WHERE id=1";
+        String sql = "UPDATE parameters SET " + tableName.getTableName().toLowerCase() + "=? WHERE id=1";
         logger.info("Setting Up " + tableName + " parameter to " + param + " ...");
         try {
             c = getConnection(false);
@@ -227,7 +236,7 @@ public class SQLManager implements SQLManagerInterface {
                 c.commit();
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE,"SQLManager {0}", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
         } finally {
             close(ps);
             close(c);
@@ -248,7 +257,7 @@ public class SQLManager implements SQLManagerInterface {
             cs.execute();
             logger.info("Test at " + cs.getTimestamp(1));
         } catch (Exception e) {
-            logger.log(Level.SEVERE,"SQLManager {0}", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
             result = false;
         } finally {
             close(cs);
@@ -266,7 +275,7 @@ public class SQLManager implements SQLManagerInterface {
             remoteC.setAutoCommit(sharedVariables.isRemoteAutocommit());
             callableStatement = remoteC.prepareCall(sqlUpdateResults.toString());
         } catch (Exception e) {
-            logger.log(Level.SEVERE,"SQLManager {0}", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
             result = false;
         }
         logger.fine("Initialize completed...");
@@ -364,7 +373,7 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.log(Level.SEVERE,"SQLManager {0}", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
         } finally {
             close(cs4);
             close(c);
@@ -401,18 +410,18 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.log(Level.SEVERE,"SQLManager {0}", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
             result = false;
         }
         return result;
     }
 
     @Override
-    public List<GamesBean> getGames() {
+    public List<GamesBean> getGamesFromDB() {
         Connection c = null;
         CallableStatement cs = null;
         List<GamesBean> result = new ArrayList<>();
-        String sql = "{CALL pSelect" + tableName + "(?)}";
+        String sql = "{CALL pSelect" + tableName.getTableName() + "(?)}";
         ResultSet rs = null;
         GamesBean game;
         boolean autoCommit = false;
@@ -435,7 +444,7 @@ public class SQLManager implements SQLManagerInterface {
                 game = new GamesBean.Builder(rs.getInt(1), tableName, sharedVariables.getNumOfMatch(tableName), "match").build();
                 int n = tableName.getNumOfOpponents() + 1;
                 for (int i = 2; i <= n; i++) {
-                    game.getRobots().add(RobotGameBean.create(rs.getString(i)));
+                    game.getRobots().add(new RobotGameBean.Builder(rs.getString(i)).build());
                 }
                 result.add(game);
             }
@@ -449,7 +458,7 @@ public class SQLManager implements SQLManagerInterface {
                 } catch (SQLException se) {
                 }
             }
-            logger.log(Level.SEVERE,"SQLManager {0}", e);
+            logger.log(Level.SEVERE, "SQLManager {0}", e);
         } finally {
             close(rs);
             close(cs);

@@ -52,7 +52,7 @@ public class RunnableCrobotsThread implements Runnable {
                     logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
                     sharedVariables.setRunnable(false);
                 } else if (sharedVariables.isRunnable()) {
-                    if (!sharedVariables.isInputBufferEmpty()) {
+                    if (!sharedVariables.isBufferEmpty()) {
                         bean = sharedVariables.getFromBuffer();
                         if (bean != null && "match".equals(bean.getAction())) {
                             robots = bean.getRobots();
@@ -88,16 +88,10 @@ public class RunnableCrobotsThread implements Runnable {
                                         cmdString = outCmd[k];
                                         if ((cmdString != null) && (cmdString.length() > 60)) {
                                             try {
-                                                calculatedBean.getRobots().add(
-                                                        RobotGameBean.create(
-                                                        cmdString.substring(4, 17).trim(),
-                                                        //Integer.parseInt(cmdString.substring( 18, 27).trim()),
-                                                        Integer.parseInt(cmdString.substring(28, 37).trim()),
-                                                        Integer.parseInt(cmdString.substring(38, 47).trim()),
-                                                        Integer.parseInt(cmdString.substring(58, 68).trim())));
+                                                calculatedBean.getRobots().add(new RobotGameBean.Builder(cmdString.substring(4, 17).trim()).setWin(Integer.parseInt(cmdString.substring(28, 37).trim())).setTie(Integer.parseInt(cmdString.substring(38, 47).trim())).setPoints(Integer.parseInt(cmdString.substring(58, 68).trim())).build());
                                                 ok = true;
                                             } catch (Exception e) {
-                                                logger.log(Level.SEVERE,"RunnableCrobotsThread {0}", e);
+                                                logger.log(Level.SEVERE, "RunnableCrobotsThread {0}", e);
                                                 ok = false;
                                                 break;
                                             }
@@ -153,12 +147,12 @@ public class RunnableCrobotsThread implements Runnable {
             }
 
             logger.info("Shutdown thread : " + threadName);
-            if (!sharedVariables.isGameBufferEmpty()) {
+            if (!sharedVariables.isGamesEmpty()) {
                 logger.info("Games buffer size : " + sharedVariables.getGamesSize());
             }
             sharedVariables.setActiveThreads((Integer) (sharedVariables.getActiveThreads() - 1));
         } catch (InterruptedException exception) {
-            logger.log(Level.SEVERE,"RunnableCrobotsThread {0}", exception);
+            logger.log(Level.SEVERE, "RunnableCrobotsThread {0}", exception);
             sharedVariables.setActiveThreads((Integer) (sharedVariables.getActiveThreads() - 1));
         }
     }
