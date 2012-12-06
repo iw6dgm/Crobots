@@ -300,6 +300,11 @@ public class SharedVariables {
         if (configuration==null || configuration.isNew()) {
             try {
                 File file = new File("Crobots_config.xml");
+                
+                if (!file.exists()) {
+                    file = new File(this.getClass().getClassLoader().getResource("Crobots_config.xml").getFile());
+                }
+                
                 XMLFileHandler handler = new XMLFileHandler();
                 handler.setFile(file);
                 ConfigurationManager configMgr = ConfigurationManager.getInstance();

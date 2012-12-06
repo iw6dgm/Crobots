@@ -7,33 +7,36 @@ import junit.framework.TestSuite;
 /**
  * Unit test for simple App.
  */
-public class AppTest 
-    extends TestCase
-{
+public class AppTest
+        extends TestCase {
+
     /**
      * Create the test case
      *
      * @param testName name of the test case
      */
-    public AppTest( String testName )
-    {
-        super( testName );
+    public AppTest(String testName) {
+        super(testName);
     }
 
     /**
      * @return the suite of tests being tested
      */
-    public static Test suite()
-    {
-        return new TestSuite( AppTest.class );
+    public static Test suite() {
+        return new TestSuite(AppTest.class);
     }
 
     /**
      * Rigourous Test :-)
      */
-    public void testApp()
-    {
-        SharedVariables sharedVariables = SharedVariables.getInstance();
-        assert(sharedVariables!=null);
+    public void testApp() {
+        SharedVariables sharedVariables = null;
+        try {
+            sharedVariables = SharedVariables.getInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        assert (sharedVariables != null);
     }
 }
