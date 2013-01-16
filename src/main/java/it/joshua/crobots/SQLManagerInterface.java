@@ -5,6 +5,7 @@
 package it.joshua.crobots;
 
 import it.joshua.crobots.bean.GamesBean;
+import it.joshua.crobots.impl.DataSourceManager;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -14,6 +15,8 @@ import java.util.List;
  * @author joshua
  */
 public interface SQLManagerInterface {
+    
+    public void setDataSourceManager(DataSourceManager dataSourceManager);
 
     public Connection getConnection(boolean localDb) throws SQLException;
 
@@ -37,5 +40,5 @@ public interface SQLManagerInterface {
 
     public boolean updateResults(GamesBean bean);
 
-    public List<GamesBean> getGamesFromDB();
+    public List<GamesBean> getGamesFromDB();    
 }

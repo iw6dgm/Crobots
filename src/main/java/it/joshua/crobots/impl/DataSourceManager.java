@@ -6,6 +6,7 @@ package it.joshua.crobots.impl;
 
 import it.joshua.crobots.DataSourceManagerInterface;
 import it.joshua.crobots.SharedVariables;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -17,11 +18,25 @@ import org.apache.commons.dbcp.BasicDataSource;
 public class DataSourceManager implements DataSourceManagerInterface {
 
     private static SharedVariables sharedVariables = SharedVariables.getInstance();
-    private static Logger logger;
+    private static final Logger logger = Logger.getLogger(DataSourceManager.class.getName());
     private static BasicDataSource localDataSource, remoteDataSource;
 
     private DataSourceManager() {
-        logger = Logger.getLogger(DataSourceManager.class.getName());
+        
+    }
+
+    @Override
+    public void closeAll() {
+        try {
+            localDataSource.close();
+        } catch (SQLException ex) {
+            logger.log(Level.FINE, "{0}", ex);
+        }
+        try {
+            remoteDataSource.close();
+        } catch (SQLException ex) {
+            logger.log(Level.FINE, "{0}", ex);
+        }
     }
 
     private static class Container {

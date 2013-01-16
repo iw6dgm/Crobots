@@ -6,10 +6,11 @@ import it.joshua.crobots.data.TableName;
 import it.joshua.crobots.http.obsolete.HTTPClient;
 import it.joshua.crobots.http.obsolete.RunHTTP;
 import it.joshua.crobots.http.obsolete.RunHTTPQueryManager;
+import it.joshua.crobots.impl.DataSourceManager;
 import it.joshua.crobots.impl.Manager;
 import it.joshua.crobots.impl.RunnableCrobotsManager;
 import it.joshua.crobots.impl.RunnableCrobotsThread;
-import it.joshua.crobots.impl.SQLManager;
+import it.joshua.crobots.impl.SQLManagerFactory;
 import it.joshua.crobots.xml.Match;
 import it.joshua.crobots.xml.MatchList;
 import it.joshua.crobots.xml.ObjectFactory;
@@ -52,8 +53,8 @@ import javax.xml.bind.Unmarshaller;
  */
 public class Crobots {
 
-    private static int BUILD = 96;
-    private static String VERSION = "Crobots Java Tournament Manager v.4.61 (build " + BUILD + ") - 29/Nov/2012 - (C) Maurizio Camangi";
+    private final static int BUILD = 96;
+    private final static String VERSION = "Crobots Java Tournament Manager v.4.61 (build " + BUILD + ") - 29/Nov/2012 - (C) Maurizio Camangi";
     private static final List<String> robots = new ArrayList<>();
     private static final Logger logger = Logger.getLogger(Crobots.class.getName());
     private static SharedVariables sharedVariables;
@@ -67,6 +68,7 @@ public class Crobots {
 
         if (sharedVariables.isPrintUsage()) {
             printUsage();
+            System.exit(0);
         }
 
         if (sharedVariables.isOnlyTest()) {
@@ -74,6 +76,7 @@ public class Crobots {
                 doHTTPTest();
             } else {
                 doTest();
+                System.exit(0);
             }
         }
 
@@ -115,7 +118,7 @@ public class Crobots {
                     logger.log(Level.SEVERE, "Crobots {0}", ex);
                 }
             }
-            logger.warning("HTTP URLs buffer size not empty : " + sharedVariables.getHttpURLs().size());
+            logger.log(Level.WARNING, "HTTP URLs buffer size not empty : {0}", sharedVariables.getHttpURLs().size());
 
             try {
                 fileReader.close();
@@ -155,7 +158,7 @@ public class Crobots {
                 }
             }
 
-            logger.warning("Game buffer size not empty : " + sharedVariables.getGamesSize());
+            logger.log(Level.WARNING, "Game buffer size not empty : {0}", sharedVariables.getGamesSize());
             try {
                 fileReader.close();
                 logger.warning("Deleting Crobots.backup.xml ...");
@@ -202,7 +205,7 @@ public class Crobots {
             sharedVariables.setRunnable(true);
             sharedVariables.setGlobalStartTime(System.currentTimeMillis());
             if (sharedVariables.isTimeLimit()) {
-                logger.info("Setting up time limit " + sharedVariables.getTimeLimitMinutes() + " minute(s)");
+                logger.log(Level.INFO, "Setting up time limit {0} minute(s)", sharedVariables.getTimeLimitMinutes());
             }
 
             if (sharedVariables.isAllRounds()) {
@@ -235,7 +238,7 @@ public class Crobots {
         }
 
         if (!sharedVariables.isGamesEmpty()) {
-            logger.warning("Game buffer size not empty : " + sharedVariables.getGamesSize());
+            logger.log(Level.WARNING, "Game buffer size not empty : {0}", sharedVariables.getGamesSize());
             if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
                 logger.warning("Crobots.backup.xml file creation forced");
                 ObjectFactory obf = new ObjectFactory();
@@ -280,7 +283,7 @@ public class Crobots {
         }
 
         if (sharedVariables.getHttpURLs().size() > 0) {
-            logger.warning("HTTP URLs buffer size not empty : " + sharedVariables.getHttpURLs().size());
+            logger.log(Level.WARNING, "HTTP URLs buffer size not empty : {0}", sharedVariables.getHttpURLs().size());
             logger.warning("Crobots.backup file creation forced");
             BufferedWriter bufferedWriter = null;
             try {
@@ -307,8 +310,8 @@ public class Crobots {
     private static void runThreads(TableName tableName) {
         ArrayList<Runnable> processList = new ArrayList<>();
         sharedVariables.setActiveThreads((Integer) sharedVariables.getThreadNumber());
-        logger.info("Setting sleep interval : " + sharedVariables.getSleepInterval(tableName) + " ms");
-        logger.info("Setting num of match   : " + sharedVariables.getNumOfMatch(tableName));
+        logger.log(Level.INFO, "Setting sleep interval : {0} ms", sharedVariables.getSleepInterval(tableName));
+        logger.log(Level.INFO, "Setting num of match   : {0}", sharedVariables.getNumOfMatch(tableName));
         ExecutorService threadExecutor = Executors
                 .newFixedThreadPool(sharedVariables.getThreadNumber() + 1);
 
@@ -380,12 +383,15 @@ public class Crobots {
 
     static private void flushGameBuffer() {
         logger.info("Start flushing game buffer...");
-        SQLManager mySQLManagerF2F = SQLManager.getInstance(TableName.F2F);
-        SQLManager mySQLManager3vs3 = SQLManager.getInstance(TableName.VS3);
-        SQLManager mySQLManager4vs4 = SQLManager.getInstance(TableName.VS4);
+        DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
+        SQLManagerInterface mySQLManagerF2F = SQLManagerFactory.getInstance(TableName.F2F);
+        SQLManagerInterface mySQLManager3vs3 = SQLManagerFactory.getInstance(TableName.VS3);
+        SQLManagerInterface mySQLManager4vs4 = SQLManagerFactory.getInstance(TableName.VS4);
 
-        SQLManager.initialize();
-
+        mySQLManagerF2F.setDataSourceManager(dataSourceManager);
+        mySQLManager3vs3.setDataSourceManager(dataSourceManager);
+        mySQLManager4vs4.setDataSourceManager(dataSourceManager);
+        dataSourceManager.initialize();
         for (GamesBean gb : sharedVariables.getBuffer()) {
             if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
                 logger.warning("Kill reached! Crobots.stop found!");
@@ -393,34 +399,34 @@ public class Crobots {
             }
             switch (gb.getAction()) {
                 case "update":
-                    if ("f2f".equals(gb.getTableName())) {
+                    if ("f2f".equals(gb.getTableName().getTableName())) {
                         mySQLManagerF2F.initializeUpdates();
                         if (!mySQLManagerF2F.updateResults(gb)) {
-                            logger.severe("Can't update results of " + gb.toString());
-                            logger.warning("Recovery f2f id=" + gb.getId());
+                            logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
+                            logger.log(Level.WARNING, "Recovery f2f id={0}", gb.getId());
                             mySQLManagerF2F.recoveryTable(gb);
                         }
                         mySQLManagerF2F.releaseUpdates();
-                    } else if ("3vs3".equals(gb.getTableName())) {
+                    } else if ("3vs3".equals(gb.getTableName().getTableName())) {
                         mySQLManager3vs3.initializeUpdates();
                         if (!mySQLManager3vs3.updateResults(gb)) {
-                            logger.severe("Can't update results of " + gb.toString());
-                            logger.warning("Recovery 3vs3 id=" + gb.getId());
+                            logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
+                            logger.log(Level.WARNING, "Recovery 3vs3 id={0}", gb.getId());
                             mySQLManager3vs3.recoveryTable(gb);
                         }
                         mySQLManager3vs3.releaseUpdates();
-                    } else if ("4vs4".equals(gb.getTableName())) {
+                    } else if ("4vs4".equals(gb.getTableName().getTableName())) {
                         mySQLManager4vs4.initializeUpdates();
                         if (!mySQLManager4vs4.updateResults(gb)) {
-                            logger.severe("Can't update results of " + gb.toString());
-                            logger.warning("Recovery 4vs4 id=" + gb.getId());
+                            logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
+                            logger.log(Level.WARNING, "Recovery 4vs4 id={0}", gb.getId());
                             mySQLManager4vs4.recoveryTable(gb);
                         }
                         mySQLManager4vs4.releaseUpdates();
                     }
                     break;
                 case "recovery":
-                    logger.warning("Recovery " + gb.toString());
+                    logger.log(Level.WARNING, "Recovery {0}", gb.toString());
                     switch (gb.getTableName().getTableName()) {
                         case "f2f":
                             mySQLManagerF2F.recoveryTable(gb);
@@ -435,7 +441,9 @@ public class Crobots {
                     break;
             }
         }
-        SQLManager.closeAll();
+        
+        dataSourceManager.closeAll();
+         
         logger.info("End flushing game buffer...");
     }
 
@@ -443,49 +451,49 @@ public class Crobots {
 
         logger.info("Usage: java -jar Crobots.jar -h hostname -u username -p password -f file -P path -c script -T timelimit -H -2 -4 -K -S -t -q -?");
         logger.info("Actual parameters");
-        logger.info("OS Type           = " + sharedVariables.getOsType());
-        logger.info("path delimitator  = " + sharedVariables.getDelimit());
-        logger.info("hostname     (-h) = " + sharedVariables.getHostName());
-        logger.info("fileinput    (-f) = " + sharedVariables.getFileInput());
-        logger.info("cmd script   (-c) = " + sharedVariables.getCmdScript());
-        logger.info("username     (-u) = " + sharedVariables.getUserName());
-        logger.info("password     (-p) = " + sharedVariables.getPassWord());
-        logger.info("path         (-P) = " + sharedVariables.getPath());
-        logger.info("only test    (-t) = " + sharedVariables.isOnlyTest());
-        logger.info("only f2f     (-2) = " + sharedVariables.isOnlyF2F());
-        logger.info("only 3vs3    (-3) = " + sharedVariables.isOnly3vs3());
-        logger.info("only 4vs4    (-4) = " + sharedVariables.isOnly4vs4());
-        logger.info("quiet        (-q) = " + !sharedVariables.isVerbose());
-        logger.info("kill         (-K) = " + sharedVariables.isKill());
-        logger.info("threads      (-m) = " + sharedVariables.getThreadNumber());
-        logger.info("http mode    (-H) = " + sharedVariables.isHTTPMode());
-        logger.info("empty buffer (-E) = " + sharedVariables.isEmptyBuffer());
-        logger.info("setup mode   (-S) = " + sharedVariables.isSetupMode());
-        logger.info("init mode    (-I) = " + sharedVariables.isInitMode());
-        logger.info("time limit   (-T) = " + sharedVariables.isTimeLimit());
-
-        System.exit(0);
+        logger.log(Level.INFO, "OS Type           = {0}", sharedVariables.getOsType());
+        logger.log(Level.INFO, "path delimitator  = {0}", sharedVariables.getDelimit());
+        logger.log(Level.INFO, "hostname     (-h) = {0}", sharedVariables.getHostName());
+        logger.log(Level.INFO, "fileinput    (-f) = {0}", sharedVariables.getFileInput());
+        logger.log(Level.INFO, "cmd script   (-c) = {0}", sharedVariables.getCmdScript());
+        logger.log(Level.INFO, "username     (-u) = {0}", sharedVariables.getUserName());
+        logger.log(Level.INFO, "password     (-p) = {0}", sharedVariables.getPassWord());
+        logger.log(Level.INFO, "path         (-P) = {0}", sharedVariables.getPath());
+        logger.log(Level.INFO, "only test    (-t) = {0}", sharedVariables.isOnlyTest());
+        logger.log(Level.INFO, "only f2f     (-2) = {0}", sharedVariables.isOnlyF2F());
+        logger.log(Level.INFO, "only 3vs3    (-3) = {0}", sharedVariables.isOnly3vs3());
+        logger.log(Level.INFO, "only 4vs4    (-4) = {0}", sharedVariables.isOnly4vs4());
+        logger.log(Level.INFO, "quiet        (-q) = {0}", !sharedVariables.isVerbose());
+        logger.log(Level.INFO, "kill         (-K) = {0}", sharedVariables.isKill());
+        logger.log(Level.INFO, "threads      (-m) = {0}", sharedVariables.getThreadNumber());
+        logger.log(Level.INFO, "http mode    (-H) = {0}", sharedVariables.isHTTPMode());
+        logger.log(Level.INFO, "empty buffer (-E) = {0}", sharedVariables.isEmptyBuffer());
+        logger.log(Level.INFO, "setup mode   (-S) = {0}", sharedVariables.isSetupMode());
+        logger.log(Level.INFO, "init mode    (-I) = {0}", sharedVariables.isInitMode());
+        logger.log(Level.INFO, "time limit   (-T) = {0}", sharedVariables.isTimeLimit());
     }
-
+    
     static private void doTest() {
-        logger.info("OS Type          = " + sharedVariables.getOsType());
-        logger.info("path delimitator = " + sharedVariables.getDelimit());
-        logger.info("user name        = " + sharedVariables.getUserName());
-        logger.info("password         = " + sharedVariables.getPassWord());
-        logger.info("host name        = " + sharedVariables.getHostName());
+        logger.log(Level.INFO, "OS Type          = {0}", sharedVariables.getOsType());
+        logger.log(Level.INFO, "path delimitator = {0}", sharedVariables.getDelimit());
+        logger.log(Level.INFO, "user name        = {0}", sharedVariables.getUserName());
+        logger.log(Level.INFO, "password         = {0}", sharedVariables.getPassWord());
+        logger.log(Level.INFO, "host name        = {0}", sharedVariables.getHostName());
 
 
         Manager manager = new Manager.Builder(TableName.F2F.getNumOfOpponents()).build();
         robotTest(manager);
 
         if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-            logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
+            logger.log(Level.WARNING, "Kill reached! {0} found!", sharedVariables.getKillFile());
         }
 
-        SQLManager mySQLManager = SQLManager.getInstance(TableName.F2F);
-        logger.info("Driver : " + sharedVariables.getRemoteDriver());
-        logger.info("JDBC   : " + sharedVariables.getRemoteJdbc());
-        SQLManager.initialize();
+        SQLManagerInterface mySQLManager = SQLManagerFactory.getInstance(TableName.F2F);
+        DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
+        mySQLManager.setDataSourceManager(dataSourceManager);
+        logger.log(Level.INFO, "Driver : {0}", sharedVariables.getRemoteDriver());
+        logger.log(Level.INFO, "JDBC   : {0}", sharedVariables.getRemoteJdbc());
+        dataSourceManager.initialize();
         if (mySQLManager.test(false)) {
             logger.info("Database store procedure test ok!");
         } else {
@@ -493,37 +501,40 @@ public class Crobots {
         }
 
         if (sharedVariables.isLocalDb()) {
-            logger.info("Driver : " + sharedVariables.getLocalDriver());
-            logger.info("JDBC   : " + sharedVariables.getLocalJdbc());
+            logger.log(Level.INFO, "Driver : {0}", sharedVariables.getLocalDriver());
+            logger.log(Level.INFO, "JDBC   : {0}", sharedVariables.getLocalJdbc());
             if (mySQLManager.test(true)) {
                 logger.info("Database store procedure test ok!");
             } else {
                 logger.severe("Database store procedure test failed!");
             }
         }
-        SQLManager.closeAll();
+        dataSourceManager.closeAll();
         logger.info("Test completed");
-        System.exit(0);
     }
 
     private static void doSetup(TableName tableName) {
-        SQLManager mySQLManager = SQLManager.getInstance(tableName);
-        SQLManager.initialize();
+        SQLManagerInterface mySQLManager = SQLManagerFactory.getInstance(tableName);
+        DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
+        mySQLManager.setDataSourceManager(dataSourceManager);
+        dataSourceManager.initialize();
 
         mySQLManager.setupTable();
         mySQLManager.setupResults();
 
-        SQLManager.closeAll();
+        dataSourceManager.closeAll();
     }
 
     private static void InitializeRobots() {
         if (sharedVariables.isLocalDb()) {
             logger.info("Start locally initialize robots ... ");
             inputFileReader();
-            SQLManager myLocalSQLManager = SQLManager.getInstance(TableName.F2F); //Any table
-            SQLManager.initialize();
+            SQLManagerInterface myLocalSQLManager = SQLManagerFactory.getInstance(TableName.F2F); //Any table
+            DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
+            myLocalSQLManager.setDataSourceManager(dataSourceManager);
+            dataSourceManager.initialize();
             myLocalSQLManager.initializeRobots(robots);
-            SQLManager.closeAll();
+            dataSourceManager.closeAll();
             logger.info("Init completed.");
         } else {
             logger.warning("Can't inizialize robots remotely!");
@@ -536,15 +547,17 @@ public class Crobots {
     private static void doSetup() {
         logger.info("Setting Up Tournament...");
         inputFileReader();
-        SQLManager mySQLManager = SQLManager.getInstance(TableName.F2F);
-        SQLManager.initialize();
+        SQLManagerInterface mySQLManager = SQLManagerFactory.getInstance(TableName.F2F);
+        DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
+        mySQLManager.setDataSourceManager(dataSourceManager);
+        dataSourceManager.initialize();
 
         mySQLManager.setupRobots(robots, false);
         if (sharedVariables.isLocalDb()) {
             mySQLManager.setupRobots(robots, true);
         }
 
-        SQLManager.closeAll();
+        dataSourceManager.closeAll();
 
         if (sharedVariables.isAllRounds()) {
             doSetup(TableName.F2F);
@@ -561,8 +574,6 @@ public class Crobots {
                 doSetup(TableName.VS4);
             }
         }
-
-        SQLManager.closeAll();
 
         logger.info("Setup completed.");
         System.exit(0);
@@ -581,13 +592,7 @@ public class Crobots {
 
                 if (outCmd != null) {
 
-                    String robot = "";
-                    String games = "";
-                    String won = "";
-                    String tie = "";
-                    String lost = "";
-                    String point = "";
-                    String cmdString = "";
+                    String robot,games,won,tie,lost,point,cmdString;
 
                     cmdString = outCmd[0];
                     if ((cmdString != null) && (cmdString.length() > 60)) {
@@ -598,21 +603,18 @@ public class Crobots {
                         lost = cmdString.substring(48, 57).trim();
                         point = cmdString.substring(58, 68).trim();
 
-                        logger.info("Test ok " + robot + " games=" + games
-                                + " wins=" + won + " tie=" + tie + " lost="
-                                + lost + " point=" + point);
+                        logger.log(Level.INFO, "Test ok {0} games={1} wins={2} tie={3} lost={4} point={5}", new Object[]{robot, games, won, tie, lost, point});
                         ok++;
                     } else {
-                        logger.severe("Test " + tempRobot
-                                + " failed!");
+                        logger.log(Level.SEVERE, "Test {0} failed!", tempRobot);
                         failure++;
                     }
                 } else {
-                    logger.severe("Test " + tempRobot + " failed!");
+                    logger.log(Level.SEVERE, "Test {0} failed!", tempRobot);
                     failure++;
                 }
             }
-            logger.info("Test OK(s)=" + ok + "; Failure(s)=" + failure);
+            logger.log(Level.INFO, "Test OK(s)={0}; Failure(s)={1}", new Object[]{ok, failure});
         }
     }
 

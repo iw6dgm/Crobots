@@ -1,5 +1,6 @@
 package it.joshua.crobots.impl;
 
+import it.joshua.crobots.SQLManagerInterface;
 import it.joshua.crobots.SharedVariables;
 import it.joshua.crobots.bean.GamesBean;
 import it.joshua.crobots.data.TableName;
@@ -11,9 +12,10 @@ public class RunnableCrobotsManager implements Runnable {
 
     private static final Logger logger = Logger.getLogger(RunnableCrobotsManager.class.getName());
     private TableName tableName;
-    private static SQLManager mySQLManager;
-    private static SharedVariables sharedVariables = SharedVariables.getInstance();
-
+    private SQLManagerInterface mySQLManager;
+    private SharedVariables sharedVariables = SharedVariables.getInstance();
+    private DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
+    
     public RunnableCrobotsManager(TableName tableName) {
         super();
         this.tableName = tableName;
@@ -31,26 +33,22 @@ public class RunnableCrobotsManager implements Runnable {
         List<GamesBean> i;
         logger.info("Starting thread");
         try {
-            if (sharedVariables.isLocalDb() && sharedVariables.getLocalDriver().contains("Oracle")) {
-                mySQLManager = SQLManagerOracle.getInstance(tableName);
-            } else {
-                mySQLManager = SQLManager.getInstance(tableName);
-            }
-
-            SQLManager.initialize();
+            mySQLManager = SQLManagerFactory.getInstance(tableName);
+            mySQLManager.setDataSourceManager(dataSourceManager);
+            dataSourceManager.initialize();
 
             GamesBean bean;
             if (sharedVariables.isTimeLimit()) {
                 elapsed = System.currentTimeMillis();
                 if (((elapsed - sharedVariables.getGlobalStartTime()) / 60000) >= sharedVariables.getTimeLimitMinutes()) {
-                    logger.warning("Time limit " + sharedVariables.getTimeLimitMinutes() + " minute(s) reached. Stopping application.");
+                    logger.log(Level.WARNING, "Time limit {0} minute(s) reached. Stopping application.", sharedVariables.getTimeLimitMinutes());
                     sharedVariables.setRunnable(false);
                     isCompleted = true;
                 }
             }
             while (sharedVariables.isRunnable()) {
                 if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-                    logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
+                    logger.log(Level.WARNING, "Kill reached! {0} found!", sharedVariables.getKillFile());
                     sharedVariables.setRunnable(false);
                     isCompleted = true;
                 }
@@ -58,15 +56,15 @@ public class RunnableCrobotsManager implements Runnable {
                 if (!isCompleted && sharedVariables.getBufferSize() < sharedVariables.getBufferMinSize()) {
                     i = mySQLManager.getGamesFromDB();
                     if (i != null && i.size() > 0) {
-                        logger.fine("Append " + i.size() + " match(es) to buffer...");
+                        logger.log(Level.FINE, "Append {0} match(es) to buffer...", i.size());
                         sharedVariables.addAllToBuffer(i);
                     } else {
                         isCompleted = true;
                     }
                 }
 
-                logger.fine("isGameBufferEmpty " + sharedVariables.isGamesEmpty() + " size " + sharedVariables.getGamesSize());
-                logger.fine("isInputBufferEmpty " + sharedVariables.isBufferEmpty() + " size " + sharedVariables.getBufferSize());
+                logger.log(Level.FINE, "isGameBufferEmpty {0} size {1}", new Object[]{sharedVariables.isGamesEmpty(), sharedVariables.getGamesSize()});
+                logger.log(Level.FINE, "isInputBufferEmpty {0} size {1}", new Object[]{sharedVariables.isBufferEmpty(), sharedVariables.getBufferSize()});
 
                 if (!sharedVariables.isGamesEmpty()) {
                     boolean ok = mySQLManager.initializeUpdates();
@@ -77,14 +75,14 @@ public class RunnableCrobotsManager implements Runnable {
                             if ("update".equals(bean.getAction()) && tableName.equals(bean.getTableName())) {
 
                                 if (!mySQLManager.updateResults(bean)) {
-                                    logger.severe("Can't update results of " + bean.toString());
-                                    logger.warning("Retry " + tableName + " id=" + bean.getId());
+                                    logger.log(Level.SEVERE, "Can''t update results of {0}", bean.toString());
+                                    logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
                                     sharedVariables.addToGames(bean);
                                 } else {
                                     updates++;
                                 }
                             } else if ("recovery".equals(bean.getAction()) && tableName.equals(bean.getTableName())) {
-                                logger.warning("Recovery " + bean.toString());
+                                logger.log(Level.WARNING, "Recovery {0}", bean.toString());
                                 mySQLManager.recoveryTable(bean);
                             }
                         }
@@ -99,7 +97,7 @@ public class RunnableCrobotsManager implements Runnable {
                 } else if (sharedVariables.isRunnable()
                         && ((!isCompleted && (sharedVariables.getBufferSize() >= sharedVariables.getBufferMinSize()))
                         || (isCompleted && !sharedVariables.isBufferEmpty()))) {
-                    logger.fine("Im going to sleep for " + sharedVariables.getSleepInterval(tableName) + " ms...");
+                    logger.log(Level.FINE, "Im going to sleep for {0} ms...", sharedVariables.getSleepInterval(tableName));
                     try {
                         Thread.sleep(sharedVariables.getSleepInterval(tableName));
                     } catch (InterruptedException ie) {
@@ -110,7 +108,7 @@ public class RunnableCrobotsManager implements Runnable {
                 if (sharedVariables.isTimeLimit()) {
                     elapsed = System.currentTimeMillis();
                     if (((elapsed - sharedVariables.getGlobalStartTime()) / 60000) >= sharedVariables.getTimeLimitMinutes()) {
-                        logger.warning("Time limit " + sharedVariables.getTimeLimitMinutes() + " minute(s) reached. Stopping application.");
+                        logger.log(Level.WARNING, "Time limit {0} minute(s) reached. Stopping application.", sharedVariables.getTimeLimitMinutes());
                         sharedVariables.setRunnable(false);
                         isCompleted = true;
                     }
@@ -120,25 +118,14 @@ public class RunnableCrobotsManager implements Runnable {
             float seconds = (endTime - startTime) / 1000F;
 
             if (calls > 0 && seconds > 0) {
-                logger.info("Calls : "
-                        + calls
-                        + "; Updates : "
-                        + updates
-                        + " in "
-                        + Float.toString(seconds)
-                        + " seconds. Rate : "
-                        + Float.toString(updates / calls)
-                        + " update/call; "
-                        + Float.toString(updates / seconds)
-                        + " update/s. Idles : "
-                        + idles);
+                logger.log(Level.INFO, "Calls : {0}; Updates : {1} in {2} seconds. Rate : {3} update/call; {4} update/s. Idles : {5}", new Object[]{calls, updates, Float.toString(seconds), Float.toString(updates / calls), Float.toString(updates / seconds), idles});
             }
 
             logger.info("Shutdown thread");
         } catch (Exception exception) {
             logger.log(Level.SEVERE, "RunnableCrobotsManager {0}", exception);
         } finally {
-            SQLManager.closeAll();
+            dataSourceManager.closeAll();
         }
     }
 }

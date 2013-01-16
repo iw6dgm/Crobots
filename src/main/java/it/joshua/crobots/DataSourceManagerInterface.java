@@ -13,6 +13,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 public interface DataSourceManagerInterface {
     public BasicDataSource getConnection(String jdbc, String driver, String user, String password) throws Exception;
     public void initialize();
+    public void closeAll();
     public BasicDataSource getLocalDataSource();
     public BasicDataSource getRemoteDataSource();
     public BasicDataSource getDataSource(boolean local);

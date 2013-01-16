@@ -4,7 +4,7 @@
   	<property name="driver" value="com.mysql.jdbc.Driver" />
   	<property name="jdbc" value="jdbc:mysql://localhost:3306/crobots?useCompression=true" />
   	<property name="user" value="crobots" />
-  	<property name="pwd" value="test" />  
+  	<property name="pwd" value="" />  
   	<property name="autocommit" value="false" />  
   	<!--
   	<property name="jdbc" value="jdbc:mysql://10.208.17.129:3306/crobots?useCompression=true" />
@@ -14,8 +14,8 @@
     -->
   </category>
   <category name="LocalDatabase">
-  	<property name="driver" value="net.sourceforge.jtds.jdbc.Driver" />
-  	<property name="jdbc" value="jdbc:jtds:sqlserver://mssql:1433/tp4;socketKeepAlive=true" />
+  	<property name="driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
+  	<property name="jdbc" value="jdbc:derby:memory:LocalTest;create=true" />
   	<property name="user" value="crobots" />
   	<property name="pwd" value="test" />
   	<property name="autocommit" value="false" />  
@@ -34,7 +34,7 @@
   </category>
   <category name="Application">
   	<property name="httpmode" value="false" />
-  	<property name="localdb" value="true" />
+  	<property name="localdb" value="false" />
   	<property name="cmdscript" value="crobots.sh" />
   	<property name="onlytest" value="false" />
   	<property name="onlyf2f" value="false" />

@@ -1,5 +1,11 @@
 package it.joshua.crobots;
 
+import it.joshua.crobots.data.TableName;
+import it.joshua.crobots.impl.DataSourceManager;
+import it.joshua.crobots.impl.Manager;
+import it.joshua.crobots.impl.SQLManagerFactory;
+import java.sql.SQLException;
+import java.util.logging.Level;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -25,18 +31,28 @@ public class AppTest
     public static Test suite() {
         return new TestSuite(AppTest.class);
     }
+    
+    private void testConnection(SharedVariables sharedVariables) throws SQLException {
+        SQLManagerInterface mySQLManager = SQLManagerFactory.getInstance(TableName.F2F);
+        DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
+        mySQLManager.setDataSourceManager(dataSourceManager);
+        dataSourceManager.initialize();
+        assert (mySQLManager.test(false));
+
+        if (sharedVariables.isLocalDb()) {
+            assert (mySQLManager.test(true));
+        }
+        dataSourceManager.closeAll();
+    }
 
     /**
      * Rigourous Test :-)
      */
-    public void testApp() {
-        SharedVariables sharedVariables = null;
-        try {
-            sharedVariables = SharedVariables.getInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void testApp() throws SQLException {
+        SharedVariables sharedVariables = SharedVariables.getInstance();
 
         assert (sharedVariables != null);
+        
+        testConnection(sharedVariables);
     }
 }

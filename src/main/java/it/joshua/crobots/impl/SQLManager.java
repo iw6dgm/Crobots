@@ -26,7 +26,6 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
@@ -35,7 +34,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 public class SQLManager implements SQLManagerInterface {
 
     private static final Logger logger = Logger.getLogger(SQLManager.class.getName());
-    protected static DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
+    protected DataSourceManager dataSourceManager;
     //private CallableStatement cs2  = null;
     protected CallableStatement callableStatement = null;
     protected Connection remoteC = null;
@@ -59,12 +58,12 @@ public class SQLManager implements SQLManagerInterface {
         sqlUpdateResults.append(")}");
     }
 
-    public static void initialize() {
-        dataSourceManager.initialize();
+    @Override
+    public void setDataSourceManager(DataSourceManager dataSourceManager) {
+        this.dataSourceManager = dataSourceManager;
     }
 
     protected static class Container {
-
         private static final SQLManager f2fSQLManager = new SQLManager(TableName.F2F);
         private static final SQLManager vs3SQLManager = new SQLManager(TableName.VS3);
         private static final SQLManager vs4SQLManager = new SQLManager(TableName.VS4);
@@ -80,11 +79,6 @@ public class SQLManager implements SQLManagerInterface {
                 return Container.vs4SQLManager;
         }
         return null;
-    }
-
-    private static void closeConnection(DataSource ds) throws Exception {
-        BasicDataSource bds = (BasicDataSource) ds;
-        bds.close();
     }
 
     @Override
@@ -289,15 +283,6 @@ public class SQLManager implements SQLManagerInterface {
         //close(localC);
         close(remoteC);
         logger.fine("Release completed...");
-    }
-
-    public static void closeAll() {
-        try {
-            closeConnection(dataSourceManager.getLocalDataSource());
-            closeConnection(dataSourceManager.getRemoteDataSource());
-        } catch (Exception e) {
-            //logger.log(Level.SEVERE,"SQLManager {0}",e); botta silente
-        }
     }
 
     protected void close(CallableStatement cs) {
