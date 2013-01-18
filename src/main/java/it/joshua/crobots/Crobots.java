@@ -39,9 +39,9 @@ import javax.xml.bind.Unmarshaller;
  * Created on 13-lug-2006
  *
  * @name     Crobots
- * @version  4.62
- * @buid     97
- * @revision 17-Jan-2013
+ * @version  4.63
+ * @buid     98
+ * @revision 18-Jan-2013
  * 
  * Window - Preferences - Java - Code Style - Code Templates
  */
@@ -53,8 +53,8 @@ import javax.xml.bind.Unmarshaller;
  */
 public class Crobots {
 
-    private final static int BUILD = 97;
-    private final static String VERSION = "Crobots Java Tournament Manager v.4.62 (build " + BUILD + ") - 17/Jan/2013 - (C) Maurizio Camangi";
+    private final static int BUILD = 98;
+    private final static String VERSION = "Crobots Java Tournament Manager v.4.63 (build " + BUILD + ") - 18/Jan/2013 - (C) Maurizio Camangi";
     private static final List<String> robots = new ArrayList<>();
     private static final Logger logger = Logger.getLogger(Crobots.class.getName());
     private static SharedVariables sharedVariables;
@@ -169,7 +169,7 @@ public class Crobots {
             }
         }
 
-        if (sharedVariables.isEmptyBuffer()) {
+        if (!sharedVariables.isGamesEmpty()) {
 
             if (sharedVariables.isHTTPMode()) {
                 String url, query;
@@ -199,7 +199,7 @@ public class Crobots {
                 }
                 logger.info("End flushing HTTP URLs buffer...");
             } else {
-                flushGameBuffer();
+                flushCalculatedGames();
             }
         } else {
             sharedVariables.setRunnable(true);
@@ -278,7 +278,7 @@ public class Crobots {
                     logger.log(Level.SEVERE, "Crobots {0}", e);
                 }
             } else {
-                flushGameBuffer();
+                flushCalculatedGames();
             }
         }
 
@@ -356,7 +356,7 @@ public class Crobots {
         }
 
         if (!sharedVariables.isGamesEmpty()) {
-            flushGameBuffer();
+            flushCalculatedGames();
         }
     }
 
@@ -381,9 +381,10 @@ public class Crobots {
         }
     }
 
-    static private void flushGameBuffer() {
+    static private void flushCalculatedGames() {
         logger.info("Start flushing game buffer...");
         DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
+
         SQLManagerInterface mySQLManagerF2F = SQLManagerFactory.getInstance(TableName.F2F);
         SQLManagerInterface mySQLManager3vs3 = SQLManagerFactory.getInstance(TableName.VS3);
         SQLManagerInterface mySQLManager4vs4 = SQLManagerFactory.getInstance(TableName.VS4);
@@ -391,38 +392,45 @@ public class Crobots {
         mySQLManagerF2F.setDataSourceManager(dataSourceManager);
         mySQLManager3vs3.setDataSourceManager(dataSourceManager);
         mySQLManager4vs4.setDataSourceManager(dataSourceManager);
+
         dataSourceManager.initialize();
-        for (GamesBean gb : sharedVariables.getBuffer()) {
+
+        while (!sharedVariables.isGamesEmpty()) {
             if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
                 logger.warning("Kill reached! Crobots.stop found!");
                 break;
             }
+            GamesBean gb = sharedVariables.getFromGames();
             switch (gb.getAction()) {
                 case "update":
-                    if ("f2f".equals(gb.getTableName().getTableName())) {
-                        mySQLManagerF2F.initializeUpdates();
-                        if (!mySQLManagerF2F.updateResults(gb)) {
-                            logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
-                            logger.log(Level.WARNING, "Recovery f2f id={0}", gb.getId());
-                            mySQLManagerF2F.recoveryTable(gb);
-                        }
-                        mySQLManagerF2F.releaseUpdates();
-                    } else if ("3vs3".equals(gb.getTableName().getTableName())) {
-                        mySQLManager3vs3.initializeUpdates();
-                        if (!mySQLManager3vs3.updateResults(gb)) {
-                            logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
-                            logger.log(Level.WARNING, "Recovery 3vs3 id={0}", gb.getId());
-                            mySQLManager3vs3.recoveryTable(gb);
-                        }
-                        mySQLManager3vs3.releaseUpdates();
-                    } else if ("4vs4".equals(gb.getTableName().getTableName())) {
-                        mySQLManager4vs4.initializeUpdates();
-                        if (!mySQLManager4vs4.updateResults(gb)) {
-                            logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
-                            logger.log(Level.WARNING, "Recovery 4vs4 id={0}", gb.getId());
-                            mySQLManager4vs4.recoveryTable(gb);
-                        }
-                        mySQLManager4vs4.releaseUpdates();
+                    switch (gb.getTableName().getTableName()) {
+                        case "f2f":
+                            mySQLManagerF2F.initializeUpdates();
+                            if (!mySQLManagerF2F.updateResults(gb)) {
+                                logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
+                                logger.log(Level.WARNING, "Recovery f2f id={0}", gb.getId());
+                                mySQLManagerF2F.recoveryTable(gb);
+                            }
+                            mySQLManagerF2F.releaseUpdates();
+                            break;
+                        case "3vs3":
+                            mySQLManager3vs3.initializeUpdates();
+                            if (!mySQLManager3vs3.updateResults(gb)) {
+                                logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
+                                logger.log(Level.WARNING, "Recovery 3vs3 id={0}", gb.getId());
+                                mySQLManager3vs3.recoveryTable(gb);
+                            }
+                            mySQLManager3vs3.releaseUpdates();
+                            break;
+                        case "4vs4":
+                            mySQLManager4vs4.initializeUpdates();
+                            if (!mySQLManager4vs4.updateResults(gb)) {
+                                logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
+                                logger.log(Level.WARNING, "Recovery 4vs4 id={0}", gb.getId());
+                                mySQLManager4vs4.recoveryTable(gb);
+                            }
+                            mySQLManager4vs4.releaseUpdates();
+                            break;
                     }
                     break;
                 case "recovery":
@@ -441,9 +449,9 @@ public class Crobots {
                     break;
             }
         }
-        
+
         dataSourceManager.closeAll();
-         
+
         logger.info("End flushing game buffer...");
     }
 
@@ -472,7 +480,7 @@ public class Crobots {
         logger.log(Level.INFO, "init mode    (-I) = {0}", sharedVariables.isInitMode());
         logger.log(Level.INFO, "time limit   (-T) = {0}", sharedVariables.isTimeLimit());
     }
-    
+
     static private void doTest() {
         logger.log(Level.INFO, "OS Type          = {0}", sharedVariables.getOsType());
         logger.log(Level.INFO, "path delimitator = {0}", sharedVariables.getDelimit());
@@ -592,7 +600,7 @@ public class Crobots {
 
                 if (outCmd != null) {
 
-                    String robot,games,won,tie,lost,point,cmdString;
+                    String robot, games, won, tie, lost, point, cmdString;
 
                     cmdString = outCmd[0];
                     if ((cmdString != null) && (cmdString.length() > 60)) {

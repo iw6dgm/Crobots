@@ -29,17 +29,17 @@ public class RunnableCrobotsThread implements Runnable {
     public void run() {
         try {
             long startTime = System.currentTimeMillis();
-            logger.info("Starting thread : " + threadName);
+            logger.log(Level.INFO, "Starting thread : {0}", threadName);
             String[] outCmd = new String[tableName.getNumOfOpponents()];
             manager = new Manager.Builder(tableName.getNumOfOpponents()).build();
-            logger.info("Retrieving " + tableName.getTableName().toUpperCase() + " parameters...");
+            logger.log(Level.INFO, "Retrieving {0} parameters...", tableName.getTableName().toUpperCase());
             numOfMatch = sharedVariables.getNumOfMatch(tableName);
             if (numOfMatch == 0) {
-                logger.severe("Error retrieving " + tableName.getTableName().toUpperCase() + " parameters!");
+                logger.log(Level.SEVERE, "Error retrieving {0} parameters!", tableName.getTableName().toUpperCase());
                 throw new InterruptedException("Thread " + threadName + " interrupted!");
             }
-            logger.info("Running sets of " + numOfMatch + " matches...");
-            logger.info("Starting " + tableName + " ...");
+            logger.log(Level.INFO, "Running sets of {0} matches...", numOfMatch);
+            logger.log(Level.INFO, "Starting {0} ...", tableName);
             int global_calculated = 0;
             int idles = 0;
             String cmdString;
@@ -49,7 +49,7 @@ public class RunnableCrobotsThread implements Runnable {
             boolean ok;
             do {
                 if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
-                    logger.warning("Kill reached! " + sharedVariables.getKillFile() + " found!");
+                    logger.log(Level.WARNING, "Kill reached! {0} found!", sharedVariables.getKillFile());
                     sharedVariables.setRunnable(false);
                 } else if (sharedVariables.isRunnable()) {
                     if (!sharedVariables.isBufferEmpty()) {
@@ -103,24 +103,23 @@ public class RunnableCrobotsThread implements Runnable {
                                     if (ok) {
                                         sharedVariables.addToGames(calculatedBean);
                                     } else {
-                                        logger.severe("Calculating " + bean.toString());
-                                        logger.warning("Retry " + tableName + " id=" + bean.getId());
+                                        logger.log(Level.SEVERE, "Calculating {0}", bean.toString());
+                                        logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
                                         bean.setAction("match");
                                         sharedVariables.addToBuffer(bean);
                                     }
                                 } else {
-                                    logger.severe("Calculating " + bean.toString());
-                                    logger.warning("Retry " + tableName + " id=" + bean.getId());
+                                    logger.log(Level.SEVERE, "Calculating {0}", bean.toString());
+                                    logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
                                     bean.setAction("match");
                                     sharedVariables.addToBuffer(bean);
                                 }
                             } else {
-                                logger.severe("Malformed bean " + bean.toString());
+                                logger.log(Level.SEVERE, "Malformed bean {0}", bean.toString());
                             }
                         }
                     } else {
-                        logger.fine("Im going to sleep for " + sharedVariables.getMainSleepInterval()
-                                + " ms...");
+                        logger.log(Level.FINE, "Im going to sleep for {0} ms...", sharedVariables.getMainSleepInterval());
                         try {
                             Thread.sleep(sharedVariables.getMainSleepInterval());
                         } catch (InterruptedException ie) {
@@ -133,22 +132,15 @@ public class RunnableCrobotsThread implements Runnable {
             long endTime = System.currentTimeMillis();
             float seconds = (endTime - startTime) / 1000F;
 
-            logger.info(tableName.getTableName().toUpperCase() + " completed...");
+            logger.log(Level.INFO, "{0} completed...", tableName.getTableName().toUpperCase());
 
             if (seconds > 0) {
-                logger.info("Total match(es) calculated : "
-                        + global_calculated
-                        + " in "
-                        + Float.toString(seconds)
-                        + " seconds. Rate : "
-                        + Float.toString(global_calculated / seconds)
-                        + " match/s. Idles : "
-                        + idles);
+                logger.log(Level.INFO, "Total match(es) calculated : {0} in {1} seconds. Rate : {2} match/s. Idles : {3}", new Object[]{global_calculated, Float.toString(seconds), Float.toString(global_calculated / seconds), idles});
             }
 
-            logger.info("Shutdown thread : " + threadName);
+            logger.log(Level.INFO, "Shutdown thread : {0}", threadName);
             if (!sharedVariables.isGamesEmpty()) {
-                logger.info("Games buffer size : " + sharedVariables.getGamesSize());
+                logger.log(Level.INFO, "Games buffer size : {0}", sharedVariables.getGamesSize());
             }
             sharedVariables.setActiveThreads((Integer) (sharedVariables.getActiveThreads() - 1));
         } catch (InterruptedException exception) {

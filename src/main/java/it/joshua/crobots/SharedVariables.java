@@ -365,8 +365,7 @@ public class SharedVariables {
 
         if (threads > CONST.MAX_THREADS) {
             logger
-                    .warning("Max threads exceeded. Set to "
-                    + CONST.MAX_THREADS);
+                    .log(Level.WARNING, "Max threads exceeded. Set to {0}", CONST.MAX_THREADS);
         }
 
         if (threads < 1) {
@@ -383,7 +382,7 @@ public class SharedVariables {
 
         String os = System.getenv("OS");
         if (os != null && os.length() > 0) {
-            logger.info("OS               = " + os);
+            logger.log(Level.INFO, "OS               = {0}", os);
             if (os.contains("Windows")) {
                 osType = "Windoze";
                 // delimit = "\\";
@@ -442,8 +441,7 @@ public class SharedVariables {
                         int threads = Integer.parseInt(args[i + 1]);
 
                         if (threads > CONST.MAX_THREADS) {
-                            logger.warning("Max threads exeeded. Set to "
-                                    + CONST.MAX_THREADS);
+                            logger.log(Level.WARNING, "Max threads exeeded. Set to {0}", CONST.MAX_THREADS);
                         }
 
                         if (threads < 1) {

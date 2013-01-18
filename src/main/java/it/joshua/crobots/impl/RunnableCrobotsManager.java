@@ -15,7 +15,7 @@ public class RunnableCrobotsManager implements Runnable {
     private SQLManagerInterface mySQLManager;
     private SharedVariables sharedVariables = SharedVariables.getInstance();
     private DataSourceManager dataSourceManager = DataSourceManager.getDataSourceManager();
-    
+
     public RunnableCrobotsManager(TableName tableName) {
         super();
         this.tableName = tableName;
@@ -91,18 +91,17 @@ public class RunnableCrobotsManager implements Runnable {
                     }
 
                     mySQLManager.releaseUpdates();
-                } else if (isCompleted && sharedVariables.isBufferEmpty()) {
-                    sharedVariables.setRunnable(false);
-                    logger.info("Everything is done here...");
-                } else if (sharedVariables.isRunnable()
-                        && ((!isCompleted && (sharedVariables.getBufferSize() >= sharedVariables.getBufferMinSize()))
-                        || (isCompleted && !sharedVariables.isBufferEmpty()))) {
+                } else if ((!isCompleted && (sharedVariables.getBufferSize() >= sharedVariables.getBufferMinSize()))
+                        || (isCompleted && !sharedVariables.isBufferEmpty())) {
                     logger.log(Level.FINE, "Im going to sleep for {0} ms...", sharedVariables.getSleepInterval(tableName));
                     try {
                         Thread.sleep(sharedVariables.getSleepInterval(tableName));
                     } catch (InterruptedException ie) {
                     }
                     idles++;
+                } else if (isCompleted && sharedVariables.isBufferEmpty()) {
+                    sharedVariables.setRunnable(false);
+                    logger.info("Everything is done here...");
                 }
 
                 if (sharedVariables.isTimeLimit()) {

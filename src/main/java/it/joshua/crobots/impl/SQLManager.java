@@ -28,8 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.sql.DataSource;
-import org.apache.commons.dbcp.BasicDataSource;
 
 public class SQLManager implements SQLManagerInterface {
 
@@ -107,7 +105,7 @@ public class SQLManager implements SQLManagerInterface {
                     ps.executeUpdate();
                     ok++;
                 } catch (SQLException e) {
-                    logger.warning("Name = " + robot + " - " + e.getMessage());
+                    logger.log(Level.WARNING, "Name = {0} - {1}", new Object[]{robot, e.getMessage()});
                     failure++;
                 }
                 if (!dataSourceManager.getLocalDataSource().getDefaultAutoCommit()) {
@@ -120,14 +118,14 @@ public class SQLManager implements SQLManagerInterface {
             close(ps);
             close(c);
         }
-        logger.info("Initialize OK(s)=" + ok + "; Failure(s)=" + failure);
+        logger.log(Level.INFO, "Initialize OK(s)={0}; Failure(s)={1}", new Object[]{ok, failure});
     }
 
     @Override
     public void setupTable() {
         CallableStatement cs = null;
         Connection c = null;
-        logger.info("Setting Up table " + tableName + " ...");
+        logger.log(Level.INFO, "Setting Up table {0} ...", tableName);
         try {
             c = getConnection(sharedVariables.isLocalDb());
             cs = c.prepareCall("{CALL pSetup" + tableName.getTableName().toUpperCase() + "()}");
@@ -153,7 +151,7 @@ public class SQLManager implements SQLManagerInterface {
     public void setupResults() {
         CallableStatement cs = null;
         Connection c = null;
-        logger.info("Setting up results " + tableName + " ...");
+        logger.log(Level.INFO, "Setting up results {0} ...", tableName);
         try {
             c = getConnection(false);
             cs = c.prepareCall("{CALL pSetupResults" + tableName.getTableName().toUpperCase() + "()}");
@@ -180,7 +178,7 @@ public class SQLManager implements SQLManagerInterface {
         CallableStatement cs = null;
         Connection c = null;
         boolean autoCommit = false;
-        logger.info("Initialize robots " + ((localDb) ? "locally" : "remotely") + " ...");
+        logger.log(Level.INFO, "Initialize robots {0} ...", ((localDb) ? "locally" : "remotely"));
         try {
             c = getConnection(localDb);
             if (localDb) {
@@ -220,7 +218,7 @@ public class SQLManager implements SQLManagerInterface {
         PreparedStatement ps = null;
         Connection c = null;
         String sql = "UPDATE parameters SET " + tableName.getTableName().toLowerCase() + "=? WHERE id=1";
-        logger.info("Setting Up " + tableName + " parameter to " + param + " ...");
+        logger.log(Level.INFO, "Setting Up {0} parameter to {1} ...", new Object[]{tableName, param});
         try {
             c = getConnection(false);
             ps = c.prepareStatement(sql);
@@ -249,7 +247,7 @@ public class SQLManager implements SQLManagerInterface {
             cs = c.prepareCall(sql);
             cs.registerOutParameter(1, Types.TIMESTAMP);
             cs.execute();
-            logger.info("Test at " + cs.getTimestamp(1));
+            logger.log(Level.INFO, "Test at {0}", cs.getTimestamp(1));
         } catch (Exception e) {
             logger.log(Level.SEVERE, "SQLManager {0}", e);
             result = false;
@@ -434,7 +432,7 @@ public class SQLManager implements SQLManagerInterface {
                 result.add(game);
             }
             if (result.isEmpty()) {
-                logger.info(tableName + " table empty ...");
+                logger.log(Level.INFO, "{0} table empty ...", tableName);
             }
         } catch (Exception e) {
             if (!autoCommit) {
