@@ -14,23 +14,104 @@ public class RunnableCrobotsThread implements Runnable {
     private static final Logger logger = Logger.getLogger(RunnableCrobotsThread.class.getName());
     private static SharedVariables sharedVariables = SharedVariables.getInstance();
     private String threadName;
-    TableName tableName;
+    private TableName tableName;
     private Integer numOfMatch;
     private Manager manager;
+    private String[] outCmd;
     //private SQLManager mySQLManager;
 
     public RunnableCrobotsThread(String threadName, TableName tableName) {
         super();
         this.threadName = threadName;
         this.tableName = tableName;
+        this.outCmd = new String[tableName.getNumOfOpponents()];
+    }
+
+    private int runCrobotsCmd() {
+        int calculated = 0;
+        String cmdString;
+        StringBuilder in;
+        GamesBean bean, calculatedBean;
+        List<RobotGameBean> robots;
+        boolean ok;
+        /* Retreive match from buffer*/
+        bean = sharedVariables.getFromBuffer();
+        if (bean != null && "match".equals(bean.getAction())) {
+            robots = bean.getRobots();
+            /* Build command line */
+            if (robots != null && robots.size() > 0) {
+                in = new StringBuilder(sharedVariables.getCmdScript());
+                in.append(" ")
+                        .append(threadName)
+                        .append(" ")
+                        .append(numOfMatch)
+                        .append(" ");
+                /* Shuffle robot names order */
+                Collections.shuffle(robots);
+                for (RobotGameBean bean2 : robots) {
+                    in.append(sharedVariables.getPath())
+                            .append(sharedVariables.getDelimit())
+                            .append(bean2.getRobot())
+                            .append(" ");
+                }
+                outCmd = null;
+                /* Execute command line */
+                try {
+                    outCmd = manager.cmdExec(in.toString().trim());
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "RunnableCrobotsThread {0}", e);
+                }
+                /* Check the command line output */
+                if (outCmd != null && outCmd.length == tableName.getNumOfOpponents()) {
+
+                    calculated++;
+                    ok = false;
+                    calculatedBean = new GamesBean.Builder(bean.getId(), bean.getTableName(), bean.getGames(), "update").build();
+                    /* Build robot update information */
+                    for (int k = 0; k < outCmd.length; k++) {
+                        cmdString = outCmd[k];
+                        if ((cmdString != null) && (cmdString.length() > 60)) {
+                            try {
+                                calculatedBean.getRobots().add(new RobotGameBean.Builder(cmdString.substring(4, 17).trim()).setWin(Integer.parseInt(cmdString.substring(28, 37).trim())).setTie(Integer.parseInt(cmdString.substring(38, 47).trim())).setPoints(Integer.parseInt(cmdString.substring(58, 68).trim())).build());
+                                ok = true;
+                            } catch (Exception e) {
+                                logger.log(Level.SEVERE, "RunnableCrobotsThread {0}", e);
+                                ok = false;
+                                break;
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    /* Add update information to buffer */
+                    if (ok) {
+                        sharedVariables.addToGames(calculatedBean);
+                    } else {
+                        logger.log(Level.SEVERE, "Calculating {0}", bean.toString());
+                        logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
+                        bean.setAction("match");
+                        sharedVariables.addToBuffer(bean);
+                    }
+                } else {
+                    logger.log(Level.SEVERE, "Calculating {0}", bean.toString());
+                    logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
+                    bean.setAction("match");
+                    sharedVariables.addToBuffer(bean);
+                }
+            } else {
+                logger.log(Level.SEVERE, "Malformed bean {0}", bean.toString());
+            }
+        }
+        return calculated;
     }
 
     @Override
     public void run() {
         try {
+            int global_calculated = 0;
+            int idles = 0;
             long startTime = System.currentTimeMillis();
             logger.log(Level.INFO, "Starting thread : {0}", threadName);
-            String[] outCmd = new String[tableName.getNumOfOpponents()];
             manager = new Manager.Builder(tableName.getNumOfOpponents()).build();
             logger.log(Level.INFO, "Retrieving {0} parameters...", tableName.getTableName().toUpperCase());
             numOfMatch = sharedVariables.getNumOfMatch(tableName);
@@ -40,84 +121,13 @@ public class RunnableCrobotsThread implements Runnable {
             }
             logger.log(Level.INFO, "Running sets of {0} matches...", numOfMatch);
             logger.log(Level.INFO, "Starting {0} ...", tableName);
-            int global_calculated = 0;
-            int idles = 0;
-            String cmdString;
-            StringBuilder in;
-            GamesBean bean, calculatedBean;
-            List<RobotGameBean> robots;
-            boolean ok;
             do {
                 if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
                     logger.log(Level.WARNING, "Kill reached! {0} found!", sharedVariables.getKillFile());
                     sharedVariables.setRunnable(false);
                 } else if (sharedVariables.isRunnable()) {
                     if (!sharedVariables.isBufferEmpty()) {
-                        bean = sharedVariables.getFromBuffer();
-                        if (bean != null && "match".equals(bean.getAction())) {
-                            robots = bean.getRobots();
-
-                            if (robots != null && robots.size() > 0) {
-                                in = new StringBuilder(sharedVariables.getCmdScript());
-                                in.append(" ")
-                                        .append(threadName)
-                                        .append(" ")
-                                        .append(numOfMatch)
-                                        .append(" ");
-
-                                Collections.shuffle(robots);
-                                for (RobotGameBean bean2 : robots) {
-                                    in.append(sharedVariables.getPath())
-                                            .append(sharedVariables.getDelimit())
-                                            .append(bean2.getRobot())
-                                            .append(" ");
-                                }
-                                outCmd = null;
-                                try {
-                                    outCmd = manager.cmdExec(in.toString().trim());
-                                } catch (Exception e) {
-                                    logger.log(Level.SEVERE, "RunnableCrobotsThread {0}", e);
-                                }
-                                if (outCmd != null && outCmd.length == tableName.getNumOfOpponents()) {
-
-                                    global_calculated++;
-                                    ok = false;
-                                    calculatedBean = new GamesBean.Builder(bean.getId(), bean.getTableName(), bean.getGames(), "update").build();
-
-                                    for (int k = 0; k < outCmd.length; k++) {
-                                        cmdString = outCmd[k];
-                                        if ((cmdString != null) && (cmdString.length() > 60)) {
-                                            try {
-                                                calculatedBean.getRobots().add(new RobotGameBean.Builder(cmdString.substring(4, 17).trim()).setWin(Integer.parseInt(cmdString.substring(28, 37).trim())).setTie(Integer.parseInt(cmdString.substring(38, 47).trim())).setPoints(Integer.parseInt(cmdString.substring(58, 68).trim())).build());
-                                                ok = true;
-                                            } catch (Exception e) {
-                                                logger.log(Level.SEVERE, "RunnableCrobotsThread {0}", e);
-                                                ok = false;
-                                                break;
-                                            }
-                                        } else {
-                                            break;
-                                        }
-                                    }
-
-                                    if (ok) {
-                                        sharedVariables.addToGames(calculatedBean);
-                                    } else {
-                                        logger.log(Level.SEVERE, "Calculating {0}", bean.toString());
-                                        logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
-                                        bean.setAction("match");
-                                        sharedVariables.addToBuffer(bean);
-                                    }
-                                } else {
-                                    logger.log(Level.SEVERE, "Calculating {0}", bean.toString());
-                                    logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
-                                    bean.setAction("match");
-                                    sharedVariables.addToBuffer(bean);
-                                }
-                            } else {
-                                logger.log(Level.SEVERE, "Malformed bean {0}", bean.toString());
-                            }
-                        }
+                        global_calculated += runCrobotsCmd();
                     } else {
                         logger.log(Level.FINE, "Im going to sleep for {0} ms...", sharedVariables.getMainSleepInterval());
                         try {

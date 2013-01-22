@@ -22,10 +22,34 @@ public class RunnableCrobotsManager implements Runnable {
         sharedVariables.setRunnable(true);
     }
 
+    private int runUpdate() {
+        int updates = 0;
+        GamesBean bean;
+        /* Retreive calculated match to update until the buffer is not empty */
+        while (!sharedVariables.isGamesEmpty()) {
+            bean = sharedVariables.getFromGames();
+            if ("update".equals(bean.getAction()) && tableName.equals(bean.getTableName())) {
+                /* Perform the update */
+                if (!mySQLManager.updateResults(bean)) {
+                    logger.log(Level.SEVERE, "Can''t update results of {0}", bean.toString());
+                    logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
+                    sharedVariables.addToGames(bean);
+                } else {
+                    updates++;
+                }
+            } else if ("recovery".equals(bean.getAction()) && tableName.equals(bean.getTableName())) {
+                logger.log(Level.WARNING, "Recovery {0}", bean.toString());
+                mySQLManager.recoveryTable(bean);
+            }
+        }
+
+        return updates;
+    }
+
     @Override
     public void run() {
         long startTime = System.currentTimeMillis();
-        long elapsed = 0;
+        long elapsed;
         boolean isCompleted = false;
         int idles = 0;
         int calls = 0;
@@ -37,7 +61,7 @@ public class RunnableCrobotsManager implements Runnable {
             mySQLManager.setDataSourceManager(dataSourceManager);
             dataSourceManager.initialize();
 
-            GamesBean bean;
+            /* If time limit is reached stop the run */
             if (sharedVariables.isTimeLimit()) {
                 elapsed = System.currentTimeMillis();
                 if (((elapsed - sharedVariables.getGlobalStartTime()) / 60000) >= sharedVariables.getTimeLimitMinutes()) {
@@ -46,13 +70,15 @@ public class RunnableCrobotsManager implements Runnable {
                     isCompleted = true;
                 }
             }
+            /* Perform until running */
             while (sharedVariables.isRunnable()) {
                 if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
                     logger.log(Level.WARNING, "Kill reached! {0} found!", sharedVariables.getKillFile());
                     sharedVariables.setRunnable(false);
                     isCompleted = true;
                 }
-
+                
+                /* Retreive non-calculated match */
                 if (!isCompleted && sharedVariables.getBufferSize() < sharedVariables.getBufferMinSize()) {
                     i = mySQLManager.getGamesFromDB();
                     if (i != null && i.size() > 0) {
@@ -65,27 +91,13 @@ public class RunnableCrobotsManager implements Runnable {
 
                 logger.log(Level.FINE, "isGameBufferEmpty {0} size {1}", new Object[]{sharedVariables.isGamesEmpty(), sharedVariables.getGamesSize()});
                 logger.log(Level.FINE, "isInputBufferEmpty {0} size {1}", new Object[]{sharedVariables.isBufferEmpty(), sharedVariables.getBufferSize()});
-
+                
+                /* Perform the update */
                 if (!sharedVariables.isGamesEmpty()) {
                     boolean ok = mySQLManager.initializeUpdates();
                     if (ok) {
                         calls++;
-                        while (!sharedVariables.isGamesEmpty()) {
-                            bean = sharedVariables.getFromGames();
-                            if ("update".equals(bean.getAction()) && tableName.equals(bean.getTableName())) {
-
-                                if (!mySQLManager.updateResults(bean)) {
-                                    logger.log(Level.SEVERE, "Can''t update results of {0}", bean.toString());
-                                    logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
-                                    sharedVariables.addToGames(bean);
-                                } else {
-                                    updates++;
-                                }
-                            } else if ("recovery".equals(bean.getAction()) && tableName.equals(bean.getTableName())) {
-                                logger.log(Level.WARNING, "Recovery {0}", bean.toString());
-                                mySQLManager.recoveryTable(bean);
-                            }
-                        }
+                        updates += runUpdate();
                     } else {
                         logger.severe("Can't initialize stored");
                     }
@@ -103,7 +115,8 @@ public class RunnableCrobotsManager implements Runnable {
                     sharedVariables.setRunnable(false);
                     logger.info("Everything is done here...");
                 }
-
+                
+                /* If time limit is reached stop the run */
                 if (sharedVariables.isTimeLimit()) {
                     elapsed = System.currentTimeMillis();
                     if (((elapsed - sharedVariables.getGlobalStartTime()) / 60000) >= sharedVariables.getTimeLimitMinutes()) {

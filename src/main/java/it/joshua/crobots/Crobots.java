@@ -39,22 +39,22 @@ import javax.xml.bind.Unmarshaller;
  * Created on 13-lug-2006
  *
  * @name     Crobots
- * @version  4.63
- * @buid     98
- * @revision 18-Jan-2013
+ * @version  4.64
+ * @buid     99
+ * @revision 22-Jan-2013
  * 
  * Window - Preferences - Java - Code Style - Code Templates
  */
 /**
  * @author mcamangi
  *
- * @copyright Maurizio Camangi 2006-2012 Window - Preferences - Java - Code
+ * @copyright Maurizio Camangi 2006-2013
  * Style - Code Templates
  */
 public class Crobots {
 
-    private final static int BUILD = 98;
-    private final static String VERSION = "Crobots Java Tournament Manager v.4.63 (build " + BUILD + ") - 18/Jan/2013 - (C) Maurizio Camangi";
+    private final static int BUILD = 99;
+    private final static String VERSION = "Crobots Java Tournament Manager v.4.64 (build " + BUILD + ") - 22/Jan/2013 - (C) Maurizio Camangi";
     private static final List<String> robots = new ArrayList<>();
     private static final Logger logger = Logger.getLogger(Crobots.class.getName());
     private static SharedVariables sharedVariables;
