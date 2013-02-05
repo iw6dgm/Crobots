@@ -39,9 +39,9 @@ import javax.xml.bind.Unmarshaller;
  * Created on 13-lug-2006
  *
  * @name     Crobots
- * @version  4.64
- * @buid     99
- * @revision 22-Jan-2013
+ * @version  4.65
+ * @buid     100
+ * @revision 05-Feb-2013
  * 
  * Window - Preferences - Java - Code Style - Code Templates
  */
@@ -53,8 +53,8 @@ import javax.xml.bind.Unmarshaller;
  */
 public class Crobots {
 
-    private final static int BUILD = 99;
-    private final static String VERSION = "Crobots Java Tournament Manager v.4.64 (build " + BUILD + ") - 22/Jan/2013 - (C) Maurizio Camangi";
+    private final static int BUILD = 100;
+    private final static String VERSION = "Crobots Java Tournament Manager v.4.65 (build " + BUILD + ") - 05/Feb/2013 - (C) Maurizio Camangi";
     private static final List<String> robots = new ArrayList<>();
     private static final Logger logger = Logger.getLogger(Crobots.class.getName());
     private static SharedVariables sharedVariables;

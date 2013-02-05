@@ -386,7 +386,7 @@ public class SQLManager implements SQLManagerInterface {
             if (!sharedVariables.isRemoteAutocommit()) {
                 remoteC.commit();
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             if (!sharedVariables.isRemoteAutocommit()) {
                 try {
                     remoteC.rollback();

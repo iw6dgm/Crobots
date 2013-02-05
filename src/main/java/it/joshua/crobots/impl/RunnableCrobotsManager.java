@@ -34,6 +34,7 @@ public class RunnableCrobotsManager implements Runnable {
                     logger.log(Level.SEVERE, "Can''t update results of {0}", bean.toString());
                     logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
                     sharedVariables.addToGames(bean);
+                    sharedVariables.setRunnable(false);
                 } else {
                     updates++;
                 }

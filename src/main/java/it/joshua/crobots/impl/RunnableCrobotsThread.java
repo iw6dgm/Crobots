@@ -6,6 +6,7 @@ import it.joshua.crobots.bean.RobotGameBean;
 import it.joshua.crobots.data.TableName;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,11 +32,15 @@ public class RunnableCrobotsThread implements Runnable {
         int calculated = 0;
         String cmdString;
         StringBuilder in;
-        GamesBean bean, calculatedBean;
+        GamesBean bean = null, calculatedBean;
         List<RobotGameBean> robots;
         boolean ok;
         /* Retreive match from buffer*/
-        bean = sharedVariables.getFromBuffer();
+        try {
+            bean = sharedVariables.getFromBuffer();            
+        } catch(NoSuchElementException e) {
+            logger.log(Level.WARNING, "runCrobotsCmd {0}", e);
+        }
         if (bean != null && "match".equals(bean.getAction())) {
             robots = bean.getRobots();
             /* Build command line */
