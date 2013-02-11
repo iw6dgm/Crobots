@@ -13,33 +13,34 @@ import java.util.List;
  *
  */
 public class Pairing {
-
-    private static List<String> torneo90 = new ArrayList<String>();
-    private static List<String> torneo91 = new ArrayList<String>();
-    private static List<String> torneo92 = new ArrayList<String>();
-    private static List<String> torneo93 = new ArrayList<String>();
-    private static List<String> torneo94 = new ArrayList<String>();
-    private static List<String> torneo95 = new ArrayList<String>();
-    private static List<String> torneo96 = new ArrayList<String>();
-    private static List<String> torneo97 = new ArrayList<String>();
-    private static List<String> torneo98 = new ArrayList<String>();
-    private static List<String> torneo99 = new ArrayList<String>();
-    private static List<String> torneo2000 = new ArrayList<String>();
-    private static List<String> torneo2001 = new ArrayList<String>();
-    private static List<String> torneo2002 = new ArrayList<String>();
-    private static List<String> torneo2003 = new ArrayList<String>();
-    private static List<String> torneo2004 = new ArrayList<String>();
-    private static List<String> torneo2007 = new ArrayList<String>();
-    private static List<String> torneo2010 = new ArrayList<String>();
-    private static List<String> torneo2011 = new ArrayList<String>();
-    private static List<String> torneo2012 = new ArrayList<String>();
-    private static List<String> micro = new ArrayList<String>();
-    private static List<String> crobs = new ArrayList<String>();
-    private static List<String> aminet = new ArrayList<String>();
-    private static List<String> cplusplus = new ArrayList<String>();
-    private static List<List<String>> tournaments = new ArrayList<List<String>>();
-    private static List<String> round = new ArrayList<String>();
-    private static List<List<String>> rounds = new ArrayList<List<String>>();
+    private final static int GROUP_SIZE = 64; //Desired group size
+    private static List<String> torneo90 = new ArrayList<>();
+    private static List<String> torneo91 = new ArrayList<>();
+    private static List<String> torneo92 = new ArrayList<>();
+    private static List<String> torneo93 = new ArrayList<>();
+    private static List<String> torneo94 = new ArrayList<>();
+    private static List<String> torneo95 = new ArrayList<>();
+    private static List<String> torneo96 = new ArrayList<>();
+    private static List<String> torneo97 = new ArrayList<>();
+    private static List<String> torneo98 = new ArrayList<>();
+    private static List<String> torneo99 = new ArrayList<>();
+    private static List<String> torneo2000 = new ArrayList<>();
+    private static List<String> torneo2001 = new ArrayList<>();
+    private static List<String> torneo2002 = new ArrayList<>();
+    private static List<String> torneo2003 = new ArrayList<>();
+    private static List<String> torneo2004 = new ArrayList<>();
+    private static List<String> torneo2007 = new ArrayList<>();
+    private static List<String> torneo2010 = new ArrayList<>();
+    private static List<String> torneo2011 = new ArrayList<>();
+    private static List<String> torneo2012 = new ArrayList<>();
+    private static List<String> torneo2013 = new ArrayList<>();
+    private static List<String> micro = new ArrayList<>();
+    private static List<String> crobs = new ArrayList<>();
+    private static List<String> aminet = new ArrayList<>();
+    private static List<String> cplusplus = new ArrayList<>();
+    private static List<List<String>> tournaments = new ArrayList<>();
+    private static List<String> round = new ArrayList<>();
+    private static List<List<String>> rounds = new ArrayList<>();
     private static boolean withConflicts;
     private static int robots;
 
@@ -47,7 +48,7 @@ public class Pairing {
      * @param args
      */
     public static void main(String[] args) {
-        setup();
+        setupMicro();
         countRobots();
         int attempts = 0;
         do {
@@ -69,7 +70,7 @@ public class Pairing {
 
     private static void checkConflicts() {
         for (List<String> round : rounds) {
-            List<String> nameArray = new ArrayList<String>();
+            List<String> nameArray = new ArrayList<>();
             String baseName;
             for (String s : round) {
                 baseName = getBasename(s);
@@ -103,8 +104,8 @@ public class Pairing {
         for (List<String> round : rounds) {
             int count = 0;
             if (round != null && round.size() > 0) {
-                System.out.println("------- CFG " + n++ + " ------");
-                System.out.println("LABEL=group" + n);
+                System.out.println("------- CFG " + n + " ------");
+                System.out.println("LABEL=group" + n++);
                 System.out.print("LIST=(");
                 for (String s : round) {
                     if (count++ != 0) {
@@ -118,7 +119,7 @@ public class Pairing {
     }
 
     private static void collect() {
-        tournaments = new ArrayList<List<String>>();
+        tournaments = new ArrayList<>();
         tournaments.add(torneo90);
         tournaments.add(torneo91);
         tournaments.add(torneo92);
@@ -138,6 +139,7 @@ public class Pairing {
         tournaments.add(torneo2010);
         tournaments.add(torneo2011);
         tournaments.add(torneo2012);
+        tournaments.add(torneo2013);
         tournaments.add(crobs);
         tournaments.add(micro);
         tournaments.add(aminet);
@@ -170,19 +172,19 @@ public class Pairing {
         robots += torneo2010.size();
         robots += torneo2011.size();
         robots += torneo2012.size();
+        robots += torneo2013.size();
         System.out.println("TOTAL Robots :" + robots);
     }
 
     private static void alternativePairing() {
-        int groupSize = 67;
-        int groupCount = (robots / groupSize) + ((robots % groupSize) > 0 ? 1 : 0);
+        int groupCount = (robots / GROUP_SIZE) + ((robots % GROUP_SIZE) > 0 ? 1 : 0);
 
         int groupIndex = 0;
 
-        rounds = new ArrayList<List<String>>();
+        rounds = new ArrayList<>();
 
         for (int i = 0; i < groupCount; i++) {
-            round = new ArrayList<String>();
+            round = new ArrayList<>();
             rounds.add(round);
         }
 
@@ -217,10 +219,542 @@ public class Pairing {
         Collections.shuffle(torneo2010);
         Collections.shuffle(torneo2011);
         Collections.shuffle(torneo2012);
+        Collections.shuffle(torneo2013);
         Collections.shuffle(crobs);
         Collections.shuffle(micro);
         Collections.shuffle(aminet);
         Collections.shuffle(cplusplus);
+    }
+    
+    private static void setupMicro() {
+        System.out.print("Loading cplusplus... ");
+
+        cplusplus.add("cplusplus/selvaggio.ro");
+        cplusplus.add("cplusplus/vikingo.ro");
+
+        System.out.println(cplusplus.size() + " robot(s)");
+        System.out.print("Loading aminet... ");
+        
+        aminet.add("aminet/anticlock.ro");
+        aminet.add("aminet/mirobot.ro");
+        aminet.add("aminet/schwan.ro");
+        aminet.add("aminet/tron.ro");
+        
+        System.out.println(aminet.size() + " robot(s)");
+        System.out.print("Loading torneo90... ");
+
+        torneo90.add("torneo90/et_1.ro");
+        torneo90.add("torneo90/et_2.ro");
+        torneo90.add("torneo90/hunter.ro");
+        torneo90.add("torneo90/nexus_1.ro");
+        torneo90.add("torneo90/scanner.ro");
+        
+        System.out.println(torneo90.size() + " robot(s)");
+        System.out.print("Loading torneo91... ");
+
+        torneo91.add("torneo91/blade3.ro");
+        torneo91.add("torneo91/ccyber.ro");
+        torneo91.add("torneo91/diagonal.ro");
+        torneo91.add("torneo91/et_3.ro");
+        torneo91.add("torneo91/fdig.ro");
+        torneo91.add("torneo91/genius_j.ro");
+        torneo91.add("torneo91/gira.ro");
+        torneo91.add("torneo91/gunner.ro");
+        torneo91.add("torneo91/jazz.ro");
+        torneo91.add("torneo91/nexus_2.ro");
+        torneo91.add("torneo91/paolo101.ro");
+        torneo91.add("torneo91/paolo77.ro");
+        torneo91.add("torneo91/poor.ro");
+        torneo91.add("torneo91/robocop.ro");
+        torneo91.add("torneo91/runner.ro");
+        torneo91.add("torneo91/seeker.ro");
+        torneo91.add("torneo91/warrior2.ro");
+        
+        System.out.println(torneo91.size() + " robot(s)");
+        System.out.print("Loading torneo92... ");
+
+        torneo92.add("torneo92/ap_1.ro");
+        torneo92.add("torneo92/assassin.ro");
+        torneo92.add("torneo92/baeos.ro");
+        torneo92.add("torneo92/banzel.ro");
+        torneo92.add("torneo92/bronx-00.ro");
+        torneo92.add("torneo92/bry_bry.ro");
+        torneo92.add("torneo92/crazy.ro");
+        torneo92.add("torneo92/d47.ro");
+        torneo92.add("torneo92/daitan3.ro");
+        torneo92.add("torneo92/dancer.ro");
+        torneo92.add("torneo92/deluxe.ro");
+        torneo92.add("torneo92/et_4.ro");
+        torneo92.add("torneo92/et_5.ro");
+        torneo92.add("torneo92/flash.ro");
+        torneo92.add("torneo92/genesis.ro");
+        torneo92.add("torneo92/hunter.ro");
+        torneo92.add("torneo92/ice.ro");
+        torneo92.add("torneo92/johnny.ro");
+        torneo92.add("torneo92/mimo6new.ro");
+        torneo92.add("torneo92/mut.ro");
+        torneo92.add("torneo92/ninus6.ro");
+        torneo92.add("torneo92/nl_1a.ro");
+        torneo92.add("torneo92/nl_1b.ro");
+        torneo92.add("torneo92/ola.ro");
+        torneo92.add("torneo92/paolo.ro");
+        torneo92.add("torneo92/pavido.ro");
+        torneo92.add("torneo92/phobos_1.ro");
+        torneo92.add("torneo92/pippo.ro");
+        torneo92.add("torneo92/raid.ro");
+        torneo92.add("torneo92/random.ro");
+        torneo92.add("torneo92/revenge3.ro");
+        torneo92.add("torneo92/robbie.ro");
+        torneo92.add("torneo92/robocop2.ro");
+        torneo92.add("torneo92/robocop.ro");
+        torneo92.add("torneo92/superv.ro");
+        torneo92.add("torneo92/t1000.ro");
+        torneo92.add("torneo92/thunder.ro");
+        torneo92.add("torneo92/trio.ro");
+        torneo92.add("torneo92/uanino.ro");
+        torneo92.add("torneo92/warrior3.ro");
+
+        System.out.println(torneo92.size() + " robot(s)");
+        System.out.print("Loading torneo93... ");
+
+        torneo93.add("torneo93/ares.ro");
+        torneo93.add("torneo93/argon.ro");
+        torneo93.add("torneo93/aspide.ro");
+        torneo93.add("torneo93/beast.ro");
+        torneo93.add("torneo93/biro.ro");
+        torneo93.add("torneo93/boom.ro");
+        torneo93.add("torneo93/casual.ro");
+        torneo93.add("torneo93/corner1d.ro");
+        torneo93.add("torneo93/corner3.ro");
+        torneo93.add("torneo93/courage.ro");
+        torneo93.add("torneo93/(c).ro");
+        torneo93.add("torneo93/crob1.ro");
+        torneo93.add("torneo93/deluxe_2.ro");
+        torneo93.add("torneo93/didimo.ro");
+        torneo93.add("torneo93/elija.ro");
+        torneo93.add("torneo93/fermo.ro");
+        torneo93.add("torneo93/flash2.ro");
+        torneo93.add("torneo93/gunnyboy.ro");
+        torneo93.add("torneo93/hell.ro");
+        torneo93.add("torneo93/horse.ro");
+        torneo93.add("torneo93/isaac.ro");
+        torneo93.add("torneo93/kami.ro");
+        torneo93.add("torneo93/lazy.ro");
+        torneo93.add("torneo93/mimo13.ro");
+        torneo93.add("torneo93/mohawk.ro");
+        torneo93.add("torneo93/ninus17.ro");
+        torneo93.add("torneo93/nl_2a.ro");
+        torneo93.add("torneo93/nl_2b.ro");
+        torneo93.add("torneo93/phobos_2.ro");
+        torneo93.add("torneo93/pippo93.ro");
+        torneo93.add("torneo93/pognant.ro");
+        torneo93.add("torneo93/premana.ro");
+        torneo93.add("torneo93/raid2.ro");
+        torneo93.add("torneo93/rapper.ro");
+        torneo93.add("torneo93/r_cyborg.ro");
+        torneo93.add("torneo93/r_daneel.ro");
+        torneo93.add("torneo93/robocop3.ro");
+        torneo93.add("torneo93/spartaco.ro");
+        torneo93.add("torneo93/target.ro");
+        torneo93.add("torneo93/torneo.ro");
+        torneo93.add("torneo93/vannina.ro");
+        torneo93.add("torneo93/wassilij.ro");
+        torneo93.add("torneo93/wolfgang.ro");
+        torneo93.add("torneo93/zulu.ro");
+        
+        System.out.println(torneo93.size() + " robot(s)");
+        System.out.print("Loading torneo94... ");
+
+        torneo94.add("torneo94/anglek2.ro");
+        torneo94.add("torneo94/baubau.ro");
+        torneo94.add("torneo94/biro.ro");
+        torneo94.add("torneo94/circlek1.ro");
+        torneo94.add("torneo94/corner3b.ro");
+        torneo94.add("torneo94/didimo.ro");
+        torneo94.add("torneo94/dima10.ro");
+        torneo94.add("torneo94/dima9.ro");
+        torneo94.add("torneo94/emanuela.ro");
+        torneo94.add("torneo94/ematico.ro");
+        torneo94.add("torneo94/heavens.ro");
+        torneo94.add("torneo94/iching.ro");
+        torneo94.add("torneo94/jet.ro");
+        torneo94.add("torneo94/nemesi.ro");
+        torneo94.add("torneo94/ninus75.ro");
+        torneo94.add("torneo94/pioppo.ro");
+        torneo94.add("torneo94/pippo94b.ro");
+        torneo94.add("torneo94/robot1.ro");
+        torneo94.add("torneo94/robot2.ro");
+        torneo94.add("torneo94/superfly.ro");
+        torneo94.add("torneo94/the_dam.ro");
+        torneo94.add("torneo94/t-rex.ro");
+        
+        System.out.println(torneo94.size() + " robot(s)");
+        System.out.print("Loading torneo95... ");
+
+        torneo95.add("torneo95/andrea.ro");
+        torneo95.add("torneo95/b115e2.ro");
+        torneo95.add("torneo95/carlo.ro");
+        torneo95.add("torneo95/circle.ro");
+        torneo95.add("torneo95/diablo.ro");
+        torneo95.add("torneo95/flash4.ro");
+        torneo95.add("torneo95/heavens.ro");
+        torneo95.add("torneo95/mikezhar.ro");
+        torneo95.add("torneo95/ninus99.ro");
+        torneo95.add("torneo95/rocco.ro");
+        torneo95.add("torneo95/sel.ro");
+        torneo95.add("torneo95/skizzo.ro");
+        torneo95.add("torneo95/tmii.ro");
+        
+        System.out.println(torneo95.size() + " robot(s)");
+        System.out.print("Loading torneo96... ");
+
+        torneo96.add("torneo96/andrea96.ro");
+        torneo96.add("torneo96/carlo96.ro");
+        torneo96.add("torneo96/drago5.ro");
+        torneo96.add("torneo96/d_ray.ro");
+        torneo96.add("torneo96/gpo2.ro");
+        torneo96.add("torneo96/murdoc.ro");
+        torneo96.add("torneo96/natas.ro");
+        torneo96.add("torneo96/risk.ro");
+        torneo96.add("torneo96/tronco.ro");
+        torneo96.add("torneo96/yuri.ro");
+
+        System.out.println(torneo96.size() + " robot(s)");
+        System.out.print("Loading torneo97... ");
+
+        torneo97.add("torneo97/ciccio.ro");
+        torneo97.add("torneo97/drago6.ro");
+        torneo97.add("torneo97/erica.ro");
+        torneo97.add("torneo97/fya.ro");
+        torneo97.add("torneo97/pippo97.ro");
+        torneo97.add("torneo97/raid3.ro");
+        
+        System.out.println(torneo97.size() + " robot(s)");
+        System.out.print("Loading torneo98... ");
+
+        torneo98.add("torneo98/carla.ro");
+        torneo98.add("torneo98/fscan.ro");
+        torneo98.add("torneo98/maxheav.ro");
+        torneo98.add("torneo98/pippo98.ro");
+        torneo98.add("torneo98/plump.ro");
+        torneo98.add("torneo98/themicro.ro");
+        torneo98.add("torneo98/traker1.ro");
+        
+        System.out.println(torneo98.size() + " robot(s)");
+        System.out.print("Loading torneo99... ");
+
+        torneo99.add("torneo99/ap_5.ro");
+        torneo99.add("torneo99/flash6.ro");
+        torneo99.add("torneo99/mcenrobo.ro");
+        torneo99.add("torneo99/nexus_2.ro");
+        torneo99.add("torneo99/surrende.ro");
+        torneo99.add("torneo99/themicro.ro");
+        
+        System.out.println(torneo99.size() + " robot(s)");
+        System.out.print("Loading torneo2000... ");
+
+        System.out.println(torneo2000.size() + " robot(s)");
+        System.out.print("Loading torneo2001... ");
+
+        torneo2001.add("torneo2001/burrfoot.ro");
+        torneo2001.add("torneo2001/charles.ro");
+        torneo2001.add("torneo2001/cisc.ro");
+        torneo2001.add("torneo2001/cobra.ro");
+        torneo2001.add("torneo2001/copter.ro");
+        torneo2001.add("torneo2001/gers.ro");
+        torneo2001.add("torneo2001/grezbot.ro");
+        torneo2001.add("torneo2001/hammer.ro");
+        torneo2001.add("torneo2001/homer.ro");
+        torneo2001.add("torneo2001/klr2.ro");
+        torneo2001.add("torneo2001/kyashan.ro");
+        torneo2001.add("torneo2001/max10.ro");
+        torneo2001.add("torneo2001/mflash2.ro");
+        torneo2001.add("torneo2001/microdna.ro");
+        torneo2001.add("torneo2001/midi_zai.ro");
+        torneo2001.add("torneo2001/mnl_1a.ro");
+        torneo2001.add("torneo2001/mnl_1b.ro");
+        torneo2001.add("torneo2001/murray.ro");
+        torneo2001.add("torneo2001/neo0.ro");
+        torneo2001.add("torneo2001/pippo1a.ro");
+        torneo2001.add("torneo2001/pippo1b.ro");
+        torneo2001.add("torneo2001/raistlin.ro");
+        torneo2001.add("torneo2001/ridicol.ro");
+        torneo2001.add("torneo2001/risc.ro");
+        torneo2001.add("torneo2001/rudy_xp.ro");
+        torneo2001.add("torneo2001/sdc2.ro");
+        torneo2001.add("torneo2001/staticii.ro");
+        torneo2001.add("torneo2001/thunder.ro");
+        torneo2001.add("torneo2001/vampire.ro");
+        
+        System.out.println(torneo2001.size() + " robot(s)");
+        System.out.print("Loading torneo2002... ");
+
+        torneo2002.add("torneo2002/01.ro");
+        torneo2002.add("torneo2002/adsl.ro");
+        torneo2002.add("torneo2002/anakin.ro");
+        torneo2002.add("torneo2002/copter_2.ro");
+        torneo2002.add("torneo2002/corner5.ro");
+        torneo2002.add("torneo2002/doom2099.ro");
+        torneo2002.add("torneo2002/groucho.ro");
+        torneo2002.add("torneo2002/idefix.ro");
+        torneo2002.add("torneo2002/kyash_2.ro");
+        torneo2002.add("torneo2002/marco.ro");
+        torneo2002.add("torneo2002/mazinga.ro");
+        torneo2002.add("torneo2002/mind.ro");
+        torneo2002.add("torneo2002/neo_sifr.ro");
+        torneo2002.add("torneo2002/pippo2a.ro");
+        torneo2002.add("torneo2002/pippo2b.ro");
+        torneo2002.add("torneo2002/regis.ro");
+        torneo2002.add("torneo2002/scsi.ro");
+        torneo2002.add("torneo2002/ska.ro");
+        torneo2002.add("torneo2002/stanlio.ro");
+        torneo2002.add("torneo2002/staticxp.ro");
+        torneo2002.add("torneo2002/supernov.ro");
+        torneo2002.add("torneo2002/tigre.ro");
+        torneo2002.add("torneo2002/vaiolo.ro");
+        torneo2002.add("torneo2002/vauban.ro");
+        
+        System.out.println(torneo2002.size() + " robot(s)");
+        System.out.print("Loading torneo2003... ");
+
+        torneo2003.add("torneo2003/730.ro");
+        torneo2003.add("torneo2003/barbarian.ro");
+        torneo2003.add("torneo2003/blitz.ro");
+        torneo2003.add("torneo2003/briscolo.ro");
+        torneo2003.add("torneo2003/bruce.ro");
+        torneo2003.add("torneo2003/cvirus.ro");
+        torneo2003.add("torneo2003/danica.ro");
+        torneo2003.add("torneo2003/falco.ro");
+        torneo2003.add("torneo2003/foursquare.ro");
+        torneo2003.add("torneo2003/frame.ro");
+        torneo2003.add("torneo2003/herpes.ro");
+        torneo2003.add("torneo2003/ici.ro");
+        torneo2003.add("torneo2003/instict.ro");
+        torneo2003.add("torneo2003/janu.ro");
+        torneo2003.add("torneo2003/kyash_3m.ro");
+        torneo2003.add("torneo2003/lbr1.ro");
+        torneo2003.add("torneo2003/lbr.ro");
+        torneo2003.add("torneo2003/lebbra.ro");
+        torneo2003.add("torneo2003/minicond.ro");
+        torneo2003.add("torneo2003/morituro.ro");
+        torneo2003.add("torneo2003/nemo.ro");
+        torneo2003.add("torneo2003/neo_sel.ro");
+        torneo2003.add("torneo2003/piiico.ro");
+        torneo2003.add("torneo2003/pippo3b.ro");
+        torneo2003.add("torneo2003/pippo3.ro");
+        torneo2003.add("torneo2003/red_wolf.ro");
+        torneo2003.add("torneo2003/scilla.ro");
+        torneo2003.add("torneo2003/sirio.ro");
+        torneo2003.add("torneo2003/tartaruga.ro");
+        torneo2003.add("torneo2003/valevan.ro");
+        torneo2003.add("torneo2003/virus.ro");
+        torneo2003.add("torneo2003/yoda.ro");
+        
+        System.out.println(torneo2003.size() + " robot(s)");
+        System.out.print("Loading torneo2004... ");
+
+        torneo2004.add("torneo2004/adam.ro");
+        torneo2004.add("torneo2004/!caos.ro");
+        torneo2004.add("torneo2004/ciclope.ro");
+        torneo2004.add("torneo2004/coyote.ro");
+        torneo2004.add("torneo2004/diodo.ro");
+        torneo2004.add("torneo2004/gostar.ro");
+        torneo2004.add("torneo2004/gotar2.ro");
+        torneo2004.add("torneo2004/gotar.ro");
+        torneo2004.add("torneo2004/irap.ro");
+        torneo2004.add("torneo2004/magneto.ro");
+        torneo2004.add("torneo2004/n3g4_jr.ro");
+        torneo2004.add("torneo2004/new_mini.ro");
+        torneo2004.add("torneo2004/pippo04a.ro");
+        torneo2004.add("torneo2004/pippo04b.ro");
+        torneo2004.add("torneo2004/poldo.ro");
+        torneo2004.add("torneo2004/puma.ro");
+        torneo2004.add("torneo2004/rat-man.ro");
+        torneo2004.add("torneo2004/ravatto.ro");
+        torneo2004.add("torneo2004/rotar.ro");
+        torneo2004.add("torneo2004/selim_b.ro");
+        torneo2004.add("torneo2004/unlimited.ro");
+        
+        System.out.println(torneo2004.size() + " robot(s)");
+        System.out.print("Loading torneo2007... ");
+
+        torneo2007.add("torneo2007/angel.ro");
+        torneo2007.add("torneo2007/back.ro");
+        torneo2007.add("torneo2007/brontolo.ro");
+        torneo2007.add("torneo2007/electron.ro");
+        torneo2007.add("torneo2007/gongolo.ro");
+        torneo2007.add("torneo2007/microbo1.ro");
+        torneo2007.add("torneo2007/microbo2.ro");
+        torneo2007.add("torneo2007/pippo07a.ro");
+        torneo2007.add("torneo2007/pippo07b.ro");
+        torneo2007.add("torneo2007/pisolo.ro");
+        torneo2007.add("torneo2007/pyro.ro");
+        torneo2007.add("torneo2007/tobey.ro");
+        torneo2007.add("torneo2007/t.ro");
+        torneo2007.add("torneo2007/zigozago.ro");
+        
+        System.out.println(torneo2007.size() + " robot(s)");
+        System.out.print("Loading torneo2010... ");
+
+        torneo2010.add("torneo2010/copia.ro");
+        torneo2010.add("torneo2010/eurialo.ro");
+        torneo2010.add("torneo2010/macchia.ro");
+        torneo2010.add("torneo2010/niso.ro");
+        torneo2010.add("torneo2010/pippo10a.ro");
+        torneo2010.add("torneo2010/stitch.ro");
+        torneo2010.add("torneo2010/sweat.ro");
+        torneo2010.add("torneo2010/taglia.ro");
+        torneo2010.add("torneo2010/wall-e.ro");
+        
+        System.out.println(torneo2010.size() + " robot(s)");
+        System.out.print("Loading torneo2011... ");
+
+        torneo2011.add("torneo2011/ataman.ro");
+        torneo2011.add("torneo2011/coeurl.ro");
+        torneo2011.add("torneo2011/minion.ro");
+        torneo2011.add("torneo2011/pain.ro");
+        torneo2011.add("torneo2011/piperita.ro");
+        torneo2011.add("torneo2011/pippo11a.ro");
+        torneo2011.add("torneo2011/pippo11b.ro");
+        torneo2011.add("torneo2011/tannhause.ro");
+        torneo2011.add("torneo2011/unmaldestr.ro");
+        torneo2011.add("torneo2011/wall-e_ii.ro");
+        
+        System.out.println(torneo2011.size() + " robot(s)");
+        System.out.print("Loading torneo2012... ");
+
+        torneo2012.add("torneo2012/avoider.ro");
+        torneo2012.add("torneo2012/beat.ro");
+        torneo2012.add("torneo2012/china.ro");
+        torneo2012.add("torneo2012/easyjet.ro");
+        torneo2012.add("torneo2012/flash8c.ro");
+        torneo2012.add("torneo2012/flash8e.ro");
+        torneo2012.add("torneo2012/grezbot2.ro");
+        torneo2012.add("torneo2012/lycan.ro");
+        torneo2012.add("torneo2012/pippo12a.ro");
+        torneo2012.add("torneo2012/pippo12b.ro");
+        torneo2012.add("torneo2012/puffomic.ro");
+        torneo2012.add("torneo2012/ryanair.ro");
+        torneo2012.add("torneo2012/silversurf.ro");
+        torneo2012.add("torneo2012/wall-e_iii.ro");
+        
+        System.out.println(torneo2012.size() + " robot(s)");
+        System.out.print("Loading torneo2013... ");
+
+        torneo2013.add("torneo2013/axolotl.ro");
+        torneo2013.add("torneo2013/destro.ro");
+        torneo2013.add("torneo2013/osvaldo.ro");
+        torneo2013.add("torneo2013/pippo13a.ro");
+        torneo2013.add("torneo2013/pippo13b.ro");
+        torneo2013.add("torneo2013/pray.ro");
+        torneo2013.add("torneo2013/wall-e_iv.ro");
+        
+        System.out.println(torneo2013.size() + " robot(s)");
+        System.out.print("Loading crobs... ");
+
+        crobs.add("crobs/adversar.ro");
+        crobs.add("crobs/agressor.ro");
+        crobs.add("crobs/assassin.ro");
+        crobs.add("crobs/b4.ro");
+        crobs.add("crobs/bishop.ro");
+        crobs.add("crobs/bouncer.ro");
+        crobs.add("crobs/cassius.ro");
+        crobs.add("crobs/catfish3.ro");
+        crobs.add("crobs/chase.ro");
+        crobs.add("crobs/chaser.ro");
+        crobs.add("crobs/cornerkl.ro");
+        crobs.add("crobs/counter2.ro");
+        crobs.add("crobs/cruiser.ro");
+        crobs.add("crobs/cspotrun.ro");
+        crobs.add("crobs/danimal.ro");
+        crobs.add("crobs/dave.ro");
+        crobs.add("crobs/di.ro");
+        crobs.add("crobs/dirtyh.ro");
+        crobs.add("crobs/duck.ro");
+        crobs.add("crobs/etf_kid.ro");
+        crobs.add("crobs/flyby.ro");
+        crobs.add("crobs/fred.ro");
+        crobs.add("crobs/grunt.ro");
+        crobs.add("crobs/gsmr2.ro");
+        crobs.add("crobs/hac_atak.ro");
+        crobs.add("crobs/hak3.ro");
+        crobs.add("crobs/hitman.ro");
+        crobs.add("crobs/h-k.ro");
+        crobs.add("crobs/hunter.ro");
+        crobs.add("crobs/huntlead.ro");
+        crobs.add("crobs/intrcptr.ro");
+        crobs.add("crobs/kamikaze.ro");
+        crobs.add("crobs/killer.ro");
+        crobs.add("crobs/leader.ro");
+        crobs.add("crobs/marvin.ro");
+        crobs.add("crobs/micro.ro");
+        crobs.add("crobs/mini.ro");
+        crobs.add("crobs/ninja.ro");
+        crobs.add("crobs/nord2.ro");
+        crobs.add("crobs/nord.ro");
+        crobs.add("crobs/ogre2.ro");
+        crobs.add("crobs/ogre.ro");
+        crobs.add("crobs/pest.ro");
+        crobs.add("crobs/phantom.ro");
+        crobs.add("crobs/pingpong.ro");
+        crobs.add("crobs/pzkmin.ro");
+        crobs.add("crobs/pzk.ro");
+        crobs.add("crobs/quack.ro");
+        crobs.add("crobs/quikshot.ro");
+        crobs.add("crobs/rabbit10.ro");
+        crobs.add("crobs/rabbit.ro");
+        crobs.add("crobs/rambo3.ro");
+        crobs.add("crobs/rapest.ro");
+        crobs.add("crobs/reflex.ro");
+        crobs.add("crobs/rungun.ro");
+        crobs.add("crobs/scanlock.ro");
+        crobs.add("crobs/scanner.ro");
+        crobs.add("crobs/scan.ro");
+        crobs.add("crobs/sentry.ro");
+        crobs.add("crobs/silly.ro");
+        crobs.add("crobs/slead.ro");
+        crobs.add("crobs/spinner.ro");
+        crobs.add("crobs/spot.ro");
+        crobs.add("crobs/squirrel.ro");
+        crobs.add("crobs/stush-1.ro");
+        crobs.add("crobs/topgun.ro");
+        crobs.add("crobs/tracker.ro");
+        crobs.add("crobs/twedlede.ro");
+        crobs.add("crobs/twedledm.ro");
+        crobs.add("crobs/venom.ro");
+        crobs.add("crobs/watchdog.ro");
+        crobs.add("crobs/xecutner.ro");
+        crobs.add("crobs/xhatch.ro");
+        crobs.add("crobs/yal.ro");
+        
+        System.out.println(crobs.size() + " robot(s)");
+        System.out.print("Loading micro... ");
+
+        micro.add("micro/caccola.ro");
+        micro.add("micro/carletto.ro");
+        micro.add("micro/chobin.ro");
+        micro.add("micro/dream.ro");
+        micro.add("micro/ld.ro");
+        micro.add("micro/lucifer.ro");
+        micro.add("micro/marlene.ro");
+        micro.add("micro/md8.ro");
+        micro.add("micro/md9.ro");
+        micro.add("micro/mflash.ro");
+        micro.add("micro/minizai.ro");
+        micro.add("micro/pacoon.ro");
+        micro.add("micro/pikachu.ro");
+        micro.add("micro/pippo00a.ro");
+        micro.add("micro/pippo00.ro");
+        micro.add("micro/pirla.ro");
+        micro.add("micro/p.ro");
+        micro.add("micro/rudy.ro");
+        micro.add("micro/static.ro");
+        micro.add("micro/tanzen.ro");
+        micro.add("micro/uhm.ro");
+        micro.add("micro/zioalfa.ro");
+        micro.add("micro/zzz.ro");
+        
+        System.out.println(micro.size() + " robot(s)");        
     }
 
     private static void setup() {
@@ -1067,6 +1601,36 @@ public class Pairing {
         torneo2012.add("torneo2012/yeti.ro");
 
         System.out.println(torneo2012.size() + " robot(s)");
+        System.out.print("Loading torneo2013... ");
+        
+        torneo2013.add("torneo2013/axolotl.ro");
+        torneo2013.add("torneo2013/destro.ro");
+        torneo2013.add("torneo2013/eternity.ro");
+        torneo2013.add("torneo2013/frisa_13.ro");
+        torneo2013.add("torneo2013/gerty3.ro");
+        torneo2013.add("torneo2013/ghostrider.ro");
+        torneo2013.add("torneo2013/guanaco.ro");
+        torneo2013.add("torneo2013/gunnyb13.ro");
+        torneo2013.add("torneo2013/hal9013.ro");
+        torneo2013.add("torneo2013/jarvis.ro");
+        torneo2013.add("torneo2013/jedi12.ro");
+        torneo2013.add("torneo2013/john_blaze.ro");
+        torneo2013.add("torneo2013/lamela.ro");
+        torneo2013.add("torneo2013/lancia13.ro");
+        torneo2013.add("torneo2013/leopon.ro");
+        torneo2013.add("torneo2013/ncc-1701.ro");
+        torneo2013.add("torneo2013/okapi.ro");
+        torneo2013.add("torneo2013/ortona_13.ro");
+        torneo2013.add("torneo2013/osvaldo.ro");
+        torneo2013.add("torneo2013/pippo13a.ro");
+        torneo2013.add("torneo2013/pippo13b.ro");
+        torneo2013.add("torneo2013/pjanic.ro");
+        torneo2013.add("torneo2013/pray.ro");
+        torneo2013.add("torneo2013/ride.ro");
+        torneo2013.add("torneo2013/ug2k.ro");
+        torneo2013.add("torneo2013/wall-e_iv.ro");
+        
+        System.out.println(torneo2013.size() + " robot(s)");
         System.out.print("Loading crobs... ");
 
         crobs.add("crobs/adversar.ro");
