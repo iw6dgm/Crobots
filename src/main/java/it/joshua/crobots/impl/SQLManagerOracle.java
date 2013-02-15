@@ -6,8 +6,8 @@ import it.joshua.crobots.data.TableName;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.AbstractQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import oracle.jdbc.internal.OracleTypes;
@@ -15,19 +15,17 @@ import oracle.jdbc.internal.OracleTypes;
 public class SQLManagerOracle extends SQLManager {
 
 	private static final Logger logger = Logger.getLogger(SQLManagerOracle.class.getName());
-	private TableName tableName;
 
 	private SQLManagerOracle(TableName tableName) {
 		super(tableName);
-		this.tableName      = tableName;
 	}
 
 	@Override
-	public List<GamesBean> getGamesFromDB()
+	public AbstractQueue<GamesBean> getGamesFromDB()
 	{
 		Connection         c   = null;
 		CallableStatement cs   = null;
-		List<GamesBean> result = new ArrayList<>();
+		AbstractQueue<GamesBean> result = new ConcurrentLinkedQueue<>();
 		String sql  = "{call pSelect" + tableName + "(?,?)}";
 		ResultSet rs           = null;
 		GamesBean game         = null;

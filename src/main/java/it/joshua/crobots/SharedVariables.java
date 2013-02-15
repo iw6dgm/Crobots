@@ -148,7 +148,7 @@ public class SharedVariables {
     public void setPrintUsage(boolean aPrintUsage) {
         printUsage = aPrintUsage;
     }
-
+    @Deprecated
     public boolean isHTTPMode() {
         return HTTPMode;
     }
@@ -641,11 +641,11 @@ public class SharedVariables {
         games.add(bean);
     }
     
-    public void addAllToBuffer(List<GamesBean> list) {
+    public void addAllToBuffer(AbstractQueue<GamesBean> list) {
         buffer.addAll(list);
     }
     
-    public void addAllToGames(List<GamesBean> list) {
+    public void addAllToGames(AbstractQueue<GamesBean> list) {
         games.addAll(list);
     }
 
