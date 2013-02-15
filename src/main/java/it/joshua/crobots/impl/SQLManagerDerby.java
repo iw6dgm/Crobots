@@ -6,6 +6,7 @@ package it.joshua.crobots.impl;
 
 import it.joshua.crobots.bean.GamesBean;
 import it.joshua.crobots.data.TableName;
+import java.util.AbstractQueue;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -23,7 +24,7 @@ public class SQLManagerDerby extends SQLManager {
     }
     
     @Override
-    public List<GamesBean> getGamesFromDB() {
+    public AbstractQueue<GamesBean> getGamesFromDB() {
         return null;
     }
 
@@ -63,7 +64,7 @@ public class SQLManagerDerby extends SQLManager {
     }
 
     @Override
-    public boolean updateResults(GamesBean bean) {
+    public boolean updateResults(AbstractQueue<GamesBean> bean) {
         return super.updateResults(bean);
     }
     
