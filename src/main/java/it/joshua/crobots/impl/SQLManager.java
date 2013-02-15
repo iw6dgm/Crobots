@@ -419,7 +419,6 @@ public class SQLManager implements SQLManagerInterface {
         Connection c = null;
         CallableStatement cs = null;
         AbstractQueue<GamesBean> result = new ConcurrentLinkedQueue<>();
-        String sql = "{CALL pSelect" + tableName.getTableName() + "(?)}";
         ResultSet rs = null;
         GamesBean game;
         boolean autoCommit = false;
