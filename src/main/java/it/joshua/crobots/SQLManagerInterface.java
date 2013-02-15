@@ -8,6 +8,7 @@ import it.joshua.crobots.bean.GamesBean;
 import it.joshua.crobots.impl.DataSourceManager;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.AbstractQueue;
 import java.util.List;
 
 /**
@@ -38,7 +39,7 @@ public interface SQLManagerInterface {
 
     public void recoveryTable(GamesBean bean);
 
-    public boolean updateResults(GamesBean bean);
+    public boolean updateResults(AbstractQueue<GamesBean> bean);
 
-    public List<GamesBean> getGamesFromDB();    
+    public AbstractQueue<GamesBean> getGamesFromDB();    
 }

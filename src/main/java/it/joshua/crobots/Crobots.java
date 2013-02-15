@@ -23,9 +23,11 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -48,8 +50,7 @@ import javax.xml.bind.Unmarshaller;
 /**
  * @author mcamangi
  *
- * @copyright Maurizio Camangi 2006-2013
- * Style - Code Templates
+ * @copyright Maurizio Camangi 2006-2013 Style - Code Templates
  */
 public class Crobots {
 
@@ -395,6 +396,10 @@ public class Crobots {
 
         dataSourceManager.initialize();
 
+        AbstractQueue<GamesBean> f2fUpdates = new ConcurrentLinkedQueue<>();
+        AbstractQueue<GamesBean> vs3Updates = new ConcurrentLinkedQueue<>();
+        AbstractQueue<GamesBean> vs4Updates = new ConcurrentLinkedQueue<>();
+
         while (!sharedVariables.isGamesEmpty()) {
             if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
                 logger.warning("Kill reached! Crobots.stop found!");
@@ -405,31 +410,13 @@ public class Crobots {
                 case "update":
                     switch (gb.getTableName().getTableName()) {
                         case "f2f":
-                            mySQLManagerF2F.initializeUpdates();
-                            if (!mySQLManagerF2F.updateResults(gb)) {
-                                logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
-                                logger.log(Level.WARNING, "Recovery f2f id={0}", gb.getId());
-                                mySQLManagerF2F.recoveryTable(gb);
-                            }
-                            mySQLManagerF2F.releaseUpdates();
+                            f2fUpdates.add(gb);
                             break;
                         case "3vs3":
-                            mySQLManager3vs3.initializeUpdates();
-                            if (!mySQLManager3vs3.updateResults(gb)) {
-                                logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
-                                logger.log(Level.WARNING, "Recovery 3vs3 id={0}", gb.getId());
-                                mySQLManager3vs3.recoveryTable(gb);
-                            }
-                            mySQLManager3vs3.releaseUpdates();
+                            vs3Updates.add(gb);
                             break;
                         case "4vs4":
-                            mySQLManager4vs4.initializeUpdates();
-                            if (!mySQLManager4vs4.updateResults(gb)) {
-                                logger.log(Level.SEVERE, "Can''t update results of {0}", gb.toString());
-                                logger.log(Level.WARNING, "Recovery 4vs4 id={0}", gb.getId());
-                                mySQLManager4vs4.recoveryTable(gb);
-                            }
-                            mySQLManager4vs4.releaseUpdates();
+                            vs4Updates.add(gb);
                             break;
                     }
                     break;
@@ -448,6 +435,16 @@ public class Crobots {
                     }
                     break;
             }
+
+        }
+        if (!f2fUpdates.isEmpty()) {
+            mySQLManagerF2F.updateResults(f2fUpdates);
+        }
+        if (!vs3Updates.isEmpty()) {
+            mySQLManager3vs3.updateResults(vs3Updates);
+        }
+        if (!vs4Updates.isEmpty()) {
+            mySQLManager4vs4.updateResults(vs4Updates);
         }
 
         dataSourceManager.closeAll();

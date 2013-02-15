@@ -18,8 +18,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.ArrayList;
+import java.util.AbstractQueue;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,6 +60,7 @@ public class SQLManager implements SQLManagerInterface {
     }
 
     protected static class Container {
+
         private static final SQLManager f2fSQLManager = new SQLManager(TableName.F2F);
         private static final SQLManager vs3SQLManager = new SQLManager(TableName.VS3);
         private static final SQLManager vs4SQLManager = new SQLManager(TableName.VS4);
@@ -350,6 +353,7 @@ public class SQLManager implements SQLManagerInterface {
                 try {
                     c.rollback();
                 } catch (SQLException se) {
+                    logger.log(Level.SEVERE, "SQLManager {0}", se);
                 }
             }
             logger.log(Level.SEVERE, "SQLManager {0}", e);
@@ -360,46 +364,62 @@ public class SQLManager implements SQLManagerInterface {
     }
 
     @Override
-    public boolean updateResults(GamesBean bean) {
-        boolean result = true;
+    public boolean updateResults(AbstractQueue<GamesBean> beans) {
+        GamesBean bean = null;
         try {
-            int robotIndex = 1;
-
-            if (callableStatement == null || callableStatement.isClosed()) {
-                initializeUpdates();
-            }
-
-            callableStatement.clearParameters();
-            callableStatement.setInt(1, bean.getGames());
-            for (RobotGameBean b : bean.getRobots()) {
-                callableStatement.setString(1 + robotIndex, b.getRobot());
-                callableStatement.setInt(2 + robotIndex, b.getWin());
-                callableStatement.setInt(3 + robotIndex, b.getTie());
-                callableStatement.setInt(4 + robotIndex, b.getPoints());
-                robotIndex += 4;
-            }
-            callableStatement.executeUpdate();
-            if (!sharedVariables.isRemoteAutocommit()) {
-                remoteC.commit();
+            remoteC = getConnection(false);
+            remoteC.setAutoCommit(sharedVariables.isRemoteAutocommit());
+            callableStatement = remoteC.prepareCall(sqlUpdateResults.toString());
+            while (!beans.isEmpty()) {
+                try {
+                    bean = beans.remove();
+                    if ("update".equals(bean.getAction()) && tableName.equals(bean.getTableName())) {
+                        int robotIndex = 1;
+                        callableStatement.clearParameters();
+                        callableStatement.setInt(1, bean.getGames());
+                        for (RobotGameBean b : bean.getRobots()) {
+                            callableStatement.setString(1 + robotIndex, b.getRobot());
+                            callableStatement.setInt(2 + robotIndex, b.getWin());
+                            callableStatement.setInt(3 + robotIndex, b.getTie());
+                            callableStatement.setInt(4 + robotIndex, b.getPoints());
+                            robotIndex += 4;
+                        }
+                        callableStatement.executeUpdate();
+                        if (!sharedVariables.isRemoteAutocommit()) {
+                            remoteC.commit();
+                        }
+                    }
+                } catch (NoSuchElementException e) {
+                    logger.log(Level.WARNING, "updateResults {0}", e);
+                    return true;
+                } finally {
+                    close(callableStatement);
+                    close(remoteC);
+                }
             }
         } catch (SQLException e) {
             if (!sharedVariables.isRemoteAutocommit()) {
                 try {
                     remoteC.rollback();
                 } catch (SQLException se) {
+                    logger.log(Level.SEVERE, "SQLManager {0}", se);
                 }
             }
             logger.log(Level.SEVERE, "SQLManager {0}", e);
-            result = false;
+            if (bean!=null) {
+                recoveryTable(bean);
+            }
+            return false;
         }
-        return result;
+        return true;
     }
 
     @Override
-    public List<GamesBean> getGamesFromDB() {
+    public AbstractQueue<GamesBean> getGamesFromDB() {
         Connection c = null;
         CallableStatement cs = null;
-        List<GamesBean> result = new ArrayList<>();
+        AbstractQueue<GamesBean> result = new ConcurrentLinkedQueue<>();
+        String sql = "{CALL pSelect" + tableName.getTableName() + "(?)}";
         ResultSet rs = null;
         GamesBean game;
         boolean autoCommit = false;
