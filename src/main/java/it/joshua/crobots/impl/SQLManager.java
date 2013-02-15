@@ -3,14 +3,8 @@ package it.joshua.crobots.impl;
 /*
  * Created on 13-lug-2006
  *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
-/**
  * @author mcamangi
  *
- * TODO To change the template for this generated type comment go to Window -
- * Preferences - Java - Code Style - Code Templates
  */
 import it.joshua.crobots.SQLManagerInterface;
 import it.joshua.crobots.SharedVariables;
@@ -37,6 +31,7 @@ public class SQLManager implements SQLManagerInterface {
     protected CallableStatement callableStatement = null;
     protected Connection remoteC = null;
     protected StringBuilder sqlRecovery, sqlUpdateResults;
+    protected String sqlGetFromDB;
     protected TableName tableName;
     protected static SharedVariables sharedVariables = SharedVariables.getInstance();
 
@@ -44,6 +39,7 @@ public class SQLManager implements SQLManagerInterface {
         this.tableName = tableName;
         sqlRecovery = new StringBuilder("{CALL pRecovery" + tableName.getTableName() + "(");
         sqlUpdateResults = new StringBuilder("{CALL pUpdate" + tableName.getTableName() + "Results(?, ");
+        sqlGetFromDB = "{CALL pSelect" + tableName.getTableName() + "(?)}";
         for (int i = 0; i < tableName.getNumOfOpponents(); i++) {
             if (i > 0) {
                 sqlRecovery.append(", ");
@@ -404,7 +400,6 @@ public class SQLManager implements SQLManagerInterface {
         Connection c = null;
         CallableStatement cs = null;
         List<GamesBean> result = new ArrayList<>();
-        String sql = "{CALL pSelect" + tableName.getTableName() + "(?)}";
         ResultSet rs = null;
         GamesBean game;
         boolean autoCommit = false;
@@ -416,7 +411,7 @@ public class SQLManager implements SQLManagerInterface {
                 autoCommit = sharedVariables.isRemoteAutocommit();
             }
             c.setAutoCommit(autoCommit);
-            cs = c.prepareCall(sql);
+            cs = c.prepareCall(sqlGetFromDB);
             cs.setInt(1, sharedVariables.getBufferMinSize());
             cs.execute();
             if (!autoCommit) {

@@ -13,12 +13,17 @@ import it.joshua.crobots.data.TableName;
  * @author joshua
  */
 public class SQLManagerFactory {
+
     private static SharedVariables sharedVariables = SharedVariables.getInstance();
+
     public static SQLManagerInterface getInstance(TableName tableName) {
-        if (sharedVariables.isLocalDb() && sharedVariables.getLocalDriver().contains("Oracle")) {
+        if (sharedVariables.isLocalDb()) {
+            if (sharedVariables.getLocalDriver().contains("OracleDriver")) {
                 return SQLManagerOracle.getInstance(tableName);
-            } else {
-                return SQLManager.getInstance(tableName);
+            } else if (sharedVariables.getLocalDriver().contains("derby")) {
+                return SQLManagerDerby.getInstance(tableName);
             }
+        }
+        return SQLManager.getInstance(tableName);
     }
 }

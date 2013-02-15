@@ -15,11 +15,9 @@ import oracle.jdbc.internal.OracleTypes;
 public class SQLManagerOracle extends SQLManager {
 
 	private static final Logger logger = Logger.getLogger(SQLManagerOracle.class.getName());
-	private TableName tableName;
 
 	private SQLManagerOracle(TableName tableName) {
 		super(tableName);
-		this.tableName      = tableName;
 	}
 
 	@Override
