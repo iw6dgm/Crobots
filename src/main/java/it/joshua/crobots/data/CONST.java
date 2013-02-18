@@ -18,4 +18,10 @@ public class CONST {
     public static final String DATA_FILE = "torneo.dat";
     public static final String JDBC = "jdbc:mysql://127.0.01:3306/crobots?user=crobots&password=";
     public static final String DRIVER = "com.mysql.jdbc.Driver";
+    public static final String _MATCH_ = "match";
+    public static final String _UPDATE_ = "update";
+    public static final String _RECOVERY_ = "recovery";
+    public static final String _F2F_ = "f2f";
+    public static final String _3VS3_ = "3vs3";
+    public static final String _4VS4_ = "4vs4";
 }

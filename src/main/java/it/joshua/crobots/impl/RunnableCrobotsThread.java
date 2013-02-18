@@ -3,6 +3,7 @@ package it.joshua.crobots.impl;
 import it.joshua.crobots.SharedVariables;
 import it.joshua.crobots.bean.GamesBean;
 import it.joshua.crobots.bean.RobotGameBean;
+import it.joshua.crobots.data.CONST;
 import it.joshua.crobots.data.TableName;
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +42,7 @@ public class RunnableCrobotsThread implements Runnable {
         } catch(NoSuchElementException e) {
             logger.log(Level.WARNING, "runCrobotsCmd {0}", e);
         }
-        if (bean != null && "match".equals(bean.getAction())) {
+        if (bean != null && CONST._MATCH_.equals(bean.getAction())) {
             robots = bean.getRobots();
             /* Build command line */
             if (robots != null && robots.size() > 0) {
@@ -71,7 +72,7 @@ public class RunnableCrobotsThread implements Runnable {
 
                     calculated++;
                     ok = false;
-                    calculatedBean = new GamesBean.Builder(bean.getId(), bean.getTableName(), bean.getGames(), "update").build();
+                    calculatedBean = new GamesBean.Builder(bean.getId(), bean.getTableName(), bean.getGames(), CONST._UPDATE_).build();
                     /* Build robot update information */
                     for (int k = 0; k < outCmd.length; k++) {
                         cmdString = outCmd[k];
@@ -94,13 +95,13 @@ public class RunnableCrobotsThread implements Runnable {
                     } else {
                         logger.log(Level.SEVERE, "Calculating {0}", bean.toString());
                         logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
-                        bean.setAction("match");
+                        bean.setAction(CONST._MATCH_);
                         sharedVariables.addToBuffer(bean);
                     }
                 } else {
                     logger.log(Level.SEVERE, "Calculating {0}", bean.toString());
                     logger.log(Level.WARNING, "Retry {0} id={1}", new Object[]{tableName, bean.getId()});
-                    bean.setAction("match");
+                    bean.setAction(CONST._MATCH_);
                     sharedVariables.addToBuffer(bean);
                 }
             } else {

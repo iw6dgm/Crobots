@@ -542,6 +542,8 @@ public class SharedVariables {
     private AbstractQueue<GamesBean> buffer = new ConcurrentLinkedQueue<>();
     // Application running flag
     private volatile boolean runnable = true;
+    //Unrecoverable error flag
+    private volatile boolean unrecoverableError;
     // Timeout for threads
     private int timeout = 12;
     // Number of active and running slave threads
@@ -711,5 +713,13 @@ public class SharedVariables {
 
     public boolean isLocalAutocommit() {
         return localAutocommit;
+    }
+
+    public boolean isUnrecoverableError() {
+        return unrecoverableError;
+    }
+
+    public void setUnrecoverableError(boolean unrecoverableError) {
+        this.unrecoverableError = unrecoverableError;
     }
 }

@@ -73,6 +73,8 @@ public class RunnableCrobotsManager implements Runnable {
                             calls++;
                         } else {
                             logger.severe("Error updating results");
+                            sharedVariables.setRunnable(false);
+                            isCompleted = true;
                         }
                     } else if ((!isCompleted && (sharedVariables.getBufferSize() >= sharedVariables.getBufferMinSize()))
                             || (isCompleted && !sharedVariables.isBufferEmpty())) {

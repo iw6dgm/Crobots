@@ -2,7 +2,9 @@ package it.joshua.crobots;
 
 import it.joshua.crobots.bean.GamesBean;
 import it.joshua.crobots.bean.RobotGameBean;
+import it.joshua.crobots.data.CONST;
 import it.joshua.crobots.data.TableName;
+import it.joshua.crobots.exceptions.CrobotsUncaughtExceptionHandler;
 import it.joshua.crobots.http.obsolete.HTTPClient;
 import it.joshua.crobots.http.obsolete.RunHTTP;
 import it.joshua.crobots.http.obsolete.RunHTTPQueryManager;
@@ -204,6 +206,7 @@ public class Crobots {
             }
         } else {
             sharedVariables.setRunnable(true);
+            sharedVariables.setUnrecoverableError(false);
             sharedVariables.setGlobalStartTime(System.currentTimeMillis());
             if (sharedVariables.isTimeLimit()) {
                 logger.log(Level.INFO, "Setting up time limit {0} minute(s)", sharedVariables.getTimeLimitMinutes());
@@ -228,10 +231,13 @@ public class Crobots {
                 }
             }
         }
-
+        /**
+         * Recovery unmatched records
+         */
         if (sharedVariables.getBufferSize() > 0) {
+            logger.log(Level.WARNING, "Unmatched records found! Try to recover them...");
             for (GamesBean bean : sharedVariables.getBuffer()) {
-                bean.setAction("recovery");
+                bean.setAction(CONST._RECOVERY_);
                 if (!sharedVariables.getGames().contains(bean)) {
                     sharedVariables.addToGames(bean);
                 }
@@ -240,7 +246,7 @@ public class Crobots {
 
         if (!sharedVariables.isGamesEmpty()) {
             logger.log(Level.WARNING, "Game buffer size not empty : {0}", sharedVariables.getGamesSize());
-            if (sharedVariables.isKill() && sharedVariables.getKillfile().exists()) {
+            if (sharedVariables.isUnrecoverableError() || (sharedVariables.isKill() && sharedVariables.getKillfile().exists())) {
                 logger.warning("Crobots.backup.xml file creation forced");
                 ObjectFactory obf = new ObjectFactory();
                 MatchList ml = obf.createMatchList();
@@ -309,6 +315,15 @@ public class Crobots {
     }
 
     private static void runThreads(TableName tableName) {
+        
+        if (sharedVariables.isUnrecoverableError()) {
+            logger.log(Level.WARNING, "Unrecoverable error found! Skip process ...");
+            return;
+        }
+        
+        Thread.setDefaultUncaughtExceptionHandler(
+                new CrobotsUncaughtExceptionHandler());
+        
         ArrayList<Runnable> processList = new ArrayList<>();
         sharedVariables.setActiveThreads((Integer) sharedVariables.getThreadNumber());
         logger.log(Level.INFO, "Setting sleep interval : {0} ms", sharedVariables.getSleepInterval(tableName));
@@ -356,7 +371,7 @@ public class Crobots {
             logger.info("Threads gonna be stopped");
         }
 
-        if (!sharedVariables.isGamesEmpty()) {
+        if (!sharedVariables.isGamesEmpty() && !sharedVariables.isUnrecoverableError()) {
             flushCalculatedGames();
         }
     }
@@ -407,29 +422,29 @@ public class Crobots {
             }
             GamesBean gb = sharedVariables.getFromGames();
             switch (gb.getAction()) {
-                case "update":
+                case CONST._UPDATE_:
                     switch (gb.getTableName().getTableName()) {
-                        case "f2f":
+                        case CONST._F2F_:
                             f2fUpdates.add(gb);
                             break;
-                        case "3vs3":
+                        case CONST._3VS3_:
                             vs3Updates.add(gb);
                             break;
-                        case "4vs4":
+                        case CONST._4VS4_:
                             vs4Updates.add(gb);
                             break;
                     }
                     break;
-                case "recovery":
+                case CONST._RECOVERY_:
                     logger.log(Level.WARNING, "Recovery {0}", gb.toString());
                     switch (gb.getTableName().getTableName()) {
-                        case "f2f":
+                        case CONST._F2F_:
                             mySQLManagerF2F.recoveryTable(gb);
                             break;
-                        case "3vs3":
+                        case CONST._3VS3_:
                             mySQLManager3vs3.recoveryTable(gb);
                             break;
-                        case "4vs4":
+                        case CONST._4VS4_:
                             mySQLManager4vs4.recoveryTable(gb);
                             break;
                     }

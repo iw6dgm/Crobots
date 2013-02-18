@@ -30,17 +30,17 @@ public class SQLManagerDerby extends SQLManager {
 
     @Override
     public void setupTable() {
-        
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void setupResults() {
-        
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void setupRobots(List<String> robots, boolean localDb) {
-        
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -55,12 +55,12 @@ public class SQLManagerDerby extends SQLManager {
 
     @Override
     public void releaseUpdates() {
-        
+       throw new UnsupportedOperationException("Not supported yet."); 
     }
 
     @Override
     public void recoveryTable(GamesBean bean) {
-        
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
