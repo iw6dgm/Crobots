@@ -98,6 +98,7 @@ public class GamesBean implements Serializable {
             this.id = match.getId();
             this.games = match.getGames();
             this.action = match.getAction();
+            this.robots = new ArrayList<>();
             switch (match.getTableName()) {
                 case "f2f" :
                     this.tableName  = TableName.F2F;

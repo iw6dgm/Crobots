@@ -19,5 +19,13 @@ public class CrobotsUncaughtExceptionHandler implements
         logger.log(Level.WARNING, "caught {0}", e);
         sharedVariables.setRunnable(false);
         sharedVariables.setUnrecoverableError(true);
+        //Notify the manager thread
+        synchronized (sharedVariables.getGames()) {
+            sharedVariables.getGames().notify();
+        }
+        //Notify any waiting thread
+        synchronized (sharedVariables.getBuffer()) {
+            sharedVariables.getBuffer().notifyAll();
+        }
     }
 }

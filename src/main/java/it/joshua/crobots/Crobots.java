@@ -43,9 +43,9 @@ import javax.xml.bind.Unmarshaller;
  * Created on 13-lug-2006
  *
  * @name     Crobots
- * @version  4.65
- * @buid     100
- * @revision 05-Feb-2013
+ * @version  4.66
+ * @buid     101
+ * @revision 18-Feb-2013
  * 
  * Window - Preferences - Java - Code Style - Code Templates
  */
@@ -56,8 +56,8 @@ import javax.xml.bind.Unmarshaller;
  */
 public class Crobots {
 
-    private final static int BUILD = 100;
-    private final static String VERSION = "Crobots Java Tournament Manager v.4.65 (build " + BUILD + ") - 05/Feb/2013 - (C) Maurizio Camangi";
+    private final static int BUILD = 101;
+    private final static String VERSION = "Crobots Java Tournament Manager v.4.66 (build " + BUILD + ") - 18/Feb/2013 - (C) Maurizio Camangi";
     private static final List<String> robots = new ArrayList<>();
     private static final Logger logger = Logger.getLogger(Crobots.class.getName());
     private static SharedVariables sharedVariables;
@@ -195,7 +195,7 @@ public class Crobots {
 
                     if (!(query != null && query.equals("ok"))) {
                         logger.severe(query);
-                        logger.severe("SKIP: " + url);
+                        logger.log(Level.SEVERE, "SKIP: {0}", url);
                         sharedVariables.getHttpURLs().add(url);
                     }
 
@@ -264,7 +264,7 @@ public class Crobots {
                     for (RobotGameBean r : gb.getRobots()) {
                         robot = obf.createRobot();
                         robot.setName(r.getRobot());
-                        if ("update".equals(gb.getAction())) {
+                        if (CONST._UPDATE_.equals(gb.getAction())) {
                             robot.setWin(r.getWin());
                             robot.setTie(r.getTie());
                             robot.setPoints(r.getPoints());
@@ -608,30 +608,36 @@ public class Crobots {
                 String in = sharedVariables.getCmdScript() + " Thread_0 1 " + sharedVariables.getPath()
                         + sharedVariables.getDelimit() + tempRobot + " "
                         + sharedVariables.getPath() + sharedVariables.getDelimit() + tempRobot;
-                String[] outCmd = manager.cmdExec(in.toString());
+                
+                try {
+                    String[] outCmd = manager.cmdExec(in.toString());
 
-                if (outCmd != null) {
+                    if (outCmd != null) {
 
-                    String robot, games, won, tie, lost, point, cmdString;
+                        String robot, games, won, tie, lost, point, cmdString;
 
-                    cmdString = outCmd[0];
-                    if ((cmdString != null) && (cmdString.length() > 60)) {
-                        robot = cmdString.substring(4, 17).trim();
-                        games = cmdString.substring(18, 27).trim();
-                        won = cmdString.substring(28, 37).trim();
-                        tie = cmdString.substring(38, 47).trim();
-                        lost = cmdString.substring(48, 57).trim();
-                        point = cmdString.substring(58, 68).trim();
+                        cmdString = outCmd[0];
+                        if ((cmdString != null) && (cmdString.length() > 60)) {
+                            robot = cmdString.substring(4, 17).trim();
+                            games = cmdString.substring(18, 27).trim();
+                            won = cmdString.substring(28, 37).trim();
+                            tie = cmdString.substring(38, 47).trim();
+                            lost = cmdString.substring(48, 57).trim();
+                            point = cmdString.substring(58, 68).trim();
 
-                        logger.log(Level.INFO, "Test ok {0} games={1} wins={2} tie={3} lost={4} point={5}", new Object[]{robot, games, won, tie, lost, point});
-                        ok++;
+                            logger.log(Level.INFO, "Test ok {0} games={1} wins={2} tie={3} lost={4} point={5}", new Object[]{robot, games, won, tie, lost, point});
+                            ok++;
+                        } else {
+                            logger.log(Level.SEVERE, "Test {0} failed!", tempRobot);
+                            failure++;
+                        }
                     } else {
                         logger.log(Level.SEVERE, "Test {0} failed!", tempRobot);
                         failure++;
                     }
-                } else {
+                } catch(IOException | InterruptedException e) {
                     logger.log(Level.SEVERE, "Test {0} failed!", tempRobot);
-                    failure++;
+                    failure++;                    
                 }
             }
             logger.log(Level.INFO, "Test OK(s)={0}; Failure(s)={1}", new Object[]{ok, failure});

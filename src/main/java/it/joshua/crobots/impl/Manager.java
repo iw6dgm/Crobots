@@ -84,7 +84,7 @@ public class Manager {
      * @return ERROR se ci sono stati problemi altrimenti l'output del comando
      *
      */
-    public String[] cmdExec(String cmdline) {
+    public String[] cmdExec(String cmdline) throws IOException, InterruptedException {
         try {
 
             if ((cmdline != null) && (cmdline.length() > 0)) {
@@ -93,16 +93,15 @@ public class Manager {
 
                 Process p = shellCrobots.exec(cmdline);
                 p.waitFor();
-                BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-                String[] output = new String[bufferSize];
-                int count = 0;
-                output[count++] = input.readLine();
-
-                while (input.ready()) {
+                String[] output;
+                try (BufferedReader input = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                    output = new String[bufferSize];
+                    int count = 0;
                     output[count++] = input.readLine();
+                    while (input.ready()) {
+                        output[count++] = input.readLine();
+                    }
                 }
-                input.close();
                 p.destroy();
                 return output;
             }
@@ -110,7 +109,7 @@ public class Manager {
             return null;
         } catch (IOException | InterruptedException err) {
             logger.log(Level.SEVERE,"Manager {0}", err);
-            return null;
+            throw err;
         }
     }
 }
