@@ -84,6 +84,7 @@ public class RunnableCrobotsManager implements Runnable {
                         } else {
                             logger.severe("Error updating results");
                             sharedVariables.setRunnable(false);
+                            sharedVariables.setUnrecoverableError(true);
                             isCompleted = true;
                             notifyThreads();
                         }
