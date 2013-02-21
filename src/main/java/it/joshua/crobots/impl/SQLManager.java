@@ -100,148 +100,112 @@ public class SQLManager implements SQLManagerInterface {
 
     @Override
     public void initializeRobots(List<String> robots) {
-        PreparedStatement ps = null;
-        Connection c = null;
         String sql = "INSERT INTO robots(name) VALUES(?)";
         int ok = 0, failure = 0;
         logger.info("Initialize locally robots ...");
-        try {
-            c = getConnection(true);
-            ps = c.prepareStatement(sql);
-            for (String robot : robots) {
-                ps.clearParameters();
-                ps.setString(1, robot);
-                try {
-                    ps.executeUpdate();
-                    ok++;
-                } catch (SQLException e) {
-                    logger.log(Level.WARNING, "Name = {0} - {1}", new Object[]{robot, e.getMessage()});
-                    failure++;
+        try (Connection c = getConnection(true)) {
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                for (String robot : robots) {
+                    ps.clearParameters();
+                    ps.setString(1, robot);
+                    try {
+                        ps.executeUpdate();
+                        ok++;
+                    } catch (SQLException e) {
+                        logger.log(Level.WARNING, "Name = {0} - {1}", new Object[]{robot, e.getMessage()});
+                        failure++;
+                    }
+                    if (!dataSourceManager.getLocalDataSource().getDefaultAutoCommit()) {
+                        c.commit();
+                    }
                 }
-                if (!dataSourceManager.getLocalDataSource().getDefaultAutoCommit()) {
-                    c.commit();
-                }
-            }
+}
         } catch (Exception e) {
             logger.log(Level.SEVERE, "SQLManager {0}", e);
-        } finally {
-            close(ps);
-            close(c);
         }
         logger.log(Level.INFO, "Initialize OK(s)={0}; Failure(s)={1}", new Object[]{ok, failure});
     }
 
     @Override
     public void setupTable() {
-        CallableStatement cs = null;
-        Connection c = null;
         logger.log(Level.INFO, "Setting Up table {0} ...", tableName);
-        try {
-            c = getConnection(sharedVariables.isLocalDb());
-            cs = c.prepareCall("{CALL pSetup" + tableName.getTableName().toUpperCase() + "()}");
-            cs.execute();
-            if (!sharedVariables.isLocalDb() && !sharedVariables.isRemoteAutocommit()) {
-                c.commit();
+        try (Connection c = getConnection(sharedVariables.isLocalDb())) {
+            
+            try (CallableStatement cs = c.prepareCall("{CALL pSetup" + tableName.getTableName().toUpperCase() + "()}")) {
+                cs.execute();
+                if (!sharedVariables.isLocalDb() && !sharedVariables.isRemoteAutocommit()) {
+                    c.commit();
+                }                
             }
+            
         } catch (Exception e) {
-            if (!sharedVariables.isLocalDb() && !sharedVariables.isRemoteAutocommit()) {
-                try {
-                    c.rollback();
-                } catch (SQLException se) {
-                }
-            }
             logger.log(Level.SEVERE, "SQLManager {0}", e);
-        } finally {
-            close(cs);
-            close(c);
         }
     }
 
     @Override
     public void setupResults() {
-        CallableStatement cs = null;
-        Connection c = null;
         logger.log(Level.INFO, "Setting up results {0} ...", tableName);
-        try {
-            c = getConnection(false);
-            cs = c.prepareCall("{CALL pSetupResults" + tableName.getTableName().toUpperCase() + "()}");
-            cs.execute();
-            if (!sharedVariables.isRemoteAutocommit()) {
-                c.commit();
+        try (Connection c = getConnection(false)) {
+            
+            try (CallableStatement cs = c.prepareCall("{CALL pSetupResults" + tableName.getTableName().toUpperCase() + "()}")) {
+                cs.execute();
+                if (!sharedVariables.isRemoteAutocommit()) {
+                    c.commit();
+                }                
             }
+            
         } catch (Exception e) {
             logger.log(Level.SEVERE, "SQLManager {0}", e);
-            if (!sharedVariables.isRemoteAutocommit()) {
-                try {
-                    c.rollback();
-                } catch (SQLException se) {
-                }
-            }
-        } finally {
-            close(cs);
-            close(c);
         }
     }
 
     @Override
     public void setupRobots(List<String> robots, boolean localDb) {
-        CallableStatement cs = null;
-        Connection c = null;
-        boolean autoCommit = false;
+        boolean autoCommit;
         logger.log(Level.INFO, "Initialize robots {0} ...", ((localDb) ? "locally" : "remotely"));
-        try {
-            c = getConnection(localDb);
+        try (Connection c = getConnection(localDb)) {
             if (localDb) {
                 autoCommit = sharedVariables.isLocalAutocommit();
             } else {
                 autoCommit = sharedVariables.isRemoteAutocommit();
             }
             c.setAutoCommit(autoCommit);
-            cs = c.prepareCall("{CALL pCleanUpRobots()}");
-            cs.execute();
-
-            cs = c.prepareCall("{CALL pInitializeRobot(?)}");
-            for (String robot : robots) {
-                cs.clearParameters();
-                cs.setString(1, robot);
+            
+            try (CallableStatement cs = c.prepareCall("{CALL pCleanUpRobots()}")) {
                 cs.execute();
             }
+
+            try (CallableStatement cs = c.prepareCall("{CALL pInitializeRobot(?)}")) {
+                for (String robot : robots) {
+                    cs.clearParameters();
+                    cs.setString(1, robot);
+                    cs.execute();
+                }
+            }
+            
             if (!autoCommit) {
                 c.commit();
             }
         } catch (Exception e) {
-            if (!autoCommit) {
-                try {
-                    c.rollback();
-                } catch (SQLException se) {
-                }
-            }
             logger.log(Level.SEVERE, "SQLManager {0}", e);
-        } finally {
-            close(cs);
-            close(c);
         }
     }
 
     @Override
     public void setupParameters(int param) {
-        PreparedStatement ps = null;
-        Connection c = null;
         String sql = "UPDATE parameters SET " + tableName.getTableName().toLowerCase() + "=? WHERE id=1";
         logger.log(Level.INFO, "Setting Up {0} parameter to {1} ...", new Object[]{tableName, param});
-        try {
-            c = getConnection(false);
-            ps = c.prepareStatement(sql);
-            ps.setInt(1, param);
-            ps.executeUpdate();
-            if (!dataSourceManager.getRemoteDataSource().getDefaultAutoCommit()) {
-                c.commit();
+        try (Connection c = getConnection(false)) {
+            try (PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setInt(1, param);
+                ps.executeUpdate();
+                if (!dataSourceManager.getRemoteDataSource().getDefaultAutoCommit()) {
+                    c.commit();
+                }
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "SQLManager {0}", e);
-        } finally {
-            close(ps);
-            close(c);
         }
     }
 
@@ -250,20 +214,15 @@ public class SQLManager implements SQLManagerInterface {
         boolean result = true;
 
         String sql = "{CALL pTest(?)}";
-        CallableStatement cs = null;
-        Connection c = null;
-        try {
-            c = getConnection(localDb);
-            cs = c.prepareCall(sql);
-            cs.registerOutParameter(1, Types.TIMESTAMP);
-            cs.execute();
-            logger.log(Level.INFO, "Test at {0}", cs.getTimestamp(1));
+        try (Connection c = getConnection(localDb)) {
+            try (CallableStatement cs = c.prepareCall(sql)) {
+                cs.registerOutParameter(1, Types.TIMESTAMP);
+                cs.execute();
+                logger.log(Level.INFO, "Test at {0}", cs.getTimestamp(1));
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "SQLManager {0}", e);
             result = false;
-        } finally {
-            close(cs);
-            close(c);
         }
         return result;
     }
@@ -314,7 +273,7 @@ public class SQLManager implements SQLManagerInterface {
 
     @Override
     public void recoveryTable(GamesBean bean) {
-        boolean autoCommit = false;
+        boolean autoCommit;
         try (Connection c = getConnection(sharedVariables.isLocalDb())) {
             if (sharedVariables.isLocalDb()) {
                 autoCommit = sharedVariables.isLocalAutocommit();
