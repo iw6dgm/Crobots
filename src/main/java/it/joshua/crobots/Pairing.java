@@ -13,7 +13,7 @@ import java.util.List;
  *
  */
 public class Pairing {
-    private final static int GROUP_SIZE = 64; //Desired group size
+    private final static int GROUP_SIZE = 40; //Desired group size
     private static List<String> torneo90 = new ArrayList<>();
     private static List<String> torneo91 = new ArrayList<>();
     private static List<String> torneo92 = new ArrayList<>();
@@ -62,7 +62,11 @@ public class Pairing {
         show();
         buildConfigFile();
     }
-
+    /**
+     * 
+     * @param filename
+     * @return file basename (no path)
+     */
     private static String getBasename(String filename) {
         File f = new File(filename);
         return f.getName();
@@ -86,7 +90,10 @@ public class Pairing {
             }
         }
     }
-
+    
+    /** 
+     * Show pairings (plain text)
+     */
     private static void show() {
         int n = 1;
         for (List<String> round : rounds) {
@@ -98,22 +105,26 @@ public class Pairing {
             }
         }
     }
-
+    
+    /**
+     * Show pairings Python style
+     */
     private static void buildConfigFile() {
         int n = 1;
         for (List<String> round : rounds) {
             int count = 0;
             if (round != null && round.size() > 0) {
                 System.out.println("------- CFG " + n + " ------");
-                System.out.println("LABEL=group" + n++);
-                System.out.print("LIST=(");
+                System.out.println("\tlabel='group" + n+++"'");
+                StringBuilder sb = new StringBuilder("\tlistRobots=[");
                 for (String s : round) {
                     if (count++ != 0) {
-                        System.out.print(" ");
+                        sb.append(", ");
                     }
-                    System.out.print(s);
+                    sb.append("'").append(s).append("'");
                 }
-                System.out.println(")");
+                sb.append("]");
+                System.out.println(sb.toString());
             }
         }
     }
