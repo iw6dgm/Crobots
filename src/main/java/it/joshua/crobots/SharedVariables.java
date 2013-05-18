@@ -21,7 +21,7 @@ import org.jconfig.handler.XMLFileHandler;
  * Shared variables across classes and threads
  * 
  */
-public class SharedVariables {
+public final class SharedVariables {
     /**
      * Main singleton & utilities classes
      */

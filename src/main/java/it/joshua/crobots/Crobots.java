@@ -46,13 +46,9 @@ import javax.xml.bind.Unmarshaller;
  * @version  4.66
  * @buid     101
  * @revision 18-Feb-2013
- * 
- * Window - Preferences - Java - Code Style - Code Templates
- */
-/**
  * @author mcamangi
  *
- * @copyright Maurizio Camangi 2006-2013 Style - Code Templates
+ * @copyright Maurizio Camangi 2006-2013
  */
 public class Crobots {
 
