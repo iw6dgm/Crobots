@@ -9,7 +9,7 @@ import it.joshua.crobots.SharedVariables;
 import it.joshua.crobots.data.TableName;
 
 /**
- *
+ * A factory class to retreive the SQL Manager
  * @author joshua
  */
 public class SQLManagerFactory {

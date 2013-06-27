@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package it.joshua.crobots.impl;
 
 import it.joshua.crobots.bean.GamesBean;
@@ -11,7 +7,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- *
+ * Derby support for test purpose
  * @author joshua
  */
 public class SQLManagerDerby extends SQLManager {

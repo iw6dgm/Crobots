@@ -1,11 +1,7 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package it.joshua.crobots.data;
 
 /**
- *
+ * Match type and database tables prefix
  * @author joshua
  */
 public enum TableName {

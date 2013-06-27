@@ -6,13 +6,22 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Store an unique game with robots and match status info
+ * @author joshua
+ */
 public class GamesBean implements Serializable {
 
     private static final long serialVersionUID = -5915415480827752091L;
+    // Unique ID. It comes from the database
     private final Integer id;
+    // F2F, 3VS3 or 4VS4
     private final TableName tableName;
+    // Match repetition factor
     private final Integer games;
+    // Match status
     private String action;
+    // Robots list
     private List<RobotGameBean> robots;
 
     public Integer getId() {

@@ -5,7 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * It handles the thread exceptions
  * @author joshua
  */
 public class CrobotsUncaughtExceptionHandler implements

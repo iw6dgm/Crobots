@@ -2,12 +2,20 @@ package it.joshua.crobots.bean;
 
 import java.io.Serializable;
 
+/**
+ * Store a single robot status and info
+ * @author joshua
+ */
 public class RobotGameBean implements Serializable {
 
     private static final long serialVersionUID = 7391478408065757891L;
+    // Robot name as unique ID
     private final String robot;
+    // Matches won
     private Integer win;
+    // Ties
     private Integer tie;
+    // Total points calculated by the out-of-the-box Count utility
     private Integer points;
 
     public String getRobot() {
