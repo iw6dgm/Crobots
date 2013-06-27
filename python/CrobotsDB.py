@@ -4,13 +4,14 @@
 """
 "CROBOTS" Crobots Batch Tournament Manager with DataBase support
 
-Version:        Python/1.1
+Version:        Python/1.2
 
                 Derived from Crobots.py 1.3
 
 Author:         Maurizio Camangi
 
 Version History:
+                Version 1.2 Use shutil and glob to build log files
                 Version 1.1 more compact iterations / combinations with
                 start / end offset
                 
@@ -21,6 +22,8 @@ Version History:
 import sys, imp, shlex, subprocess, time, shelve, os.path
 from random import shuffle
 from itertools import combinations, islice
+from shutil import copyfileobj
+from glob import iglob
 
 # Global configuration variables
 
@@ -51,10 +54,11 @@ def run_crobots(logfile, logtype):
   #spawn processes
   for i,s in enumerate(spawnList):
     try:
-      tmpfile = open("/tmp/tmp_%s_%s_%s.log" % (logfile, i, logtype),'w')
-      procs.append(subprocess.Popen(shlex.split(s), stdin=devNull, stderr=devNull, stdout=tmpfile))
-    finally:
-      tmpfile.close()
+      with open("/tmp/tmp_%s_%s_%s.log" % (logfile, i, logtype),'w') as tmpfile:
+        procs.append(subprocess.Popen(shlex.split(s), stdin=devNull, stderr=devNull, stdout=tmpfile))
+    except OSError, e:
+      print e
+      raise SystemExit
   #wait
   for proc in procs:
     proc.wait()
@@ -64,13 +68,14 @@ def run_crobots(logfile, logtype):
     raise SystemExit
   #aggregate log files
   try:
-    os.system("cat /tmp/tmp_%s_*_%s.log >>log/%s_%s.log" % (logfile, logtype, logfile, logtype))
+    with open('log/%s_%s.log' % (logfile, logtype), 'a') as destination:
+      logfiles = 'tmp_%s_*_%s.log' % (logfile, logtype)
+      for filename in iglob(os.path.join('/tmp', logfiles)):
+        copyfileobj(open(filename, 'r'), destination)
+        clean_up_log_file(filename)      
   except OSError, e:
     print e
     raise SystemExit
-  #clean up temporary log files
-  for i in xrange(len(spawnList)):
-    clean_up_log_file("/tmp/tmp_%s_%s_%s.log" % (logfile, i, logtype))
   run_count(logfile, logtype)
   update_db(logfile, logtype)
   spawnList = []
