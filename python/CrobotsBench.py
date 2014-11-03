@@ -4,28 +4,35 @@
 """
 "CROBOTS" Crobots Batch Bench Manager to test one single robot
 
-Version:        Python/1.1
+Version:        Python/1.1.1
 
                 Derived from Crobots.py 1.3.1
 
 Author:         Maurizio Camangi
 
 Version History:
+                Patch 1.1.1 Use os.devnull
                 Version 1.1 Use shutil and glob to build log files
                 Version 1.0 is the first stable version
 
 """
 
-import sys, imp, os.path, shlex, subprocess, time
+import sys
+import imp
+import os.path
+import shlex
+import subprocess
+import time
 from random import shuffle
 from itertools import combinations
 from shutil import copyfileobj
 from glob import iglob
 
+
 # Global configuration variables
 
 #default stdin and stderr for crobots executable
-devNull = open("/dev/null",'rw')
+devNull = open(os.devnull)
 
 #command line strings
 robotPath = "%s/%s.ro"
@@ -36,7 +43,8 @@ countCmdLine = "count -p -t log/%s_%s >/dev/null 2>&1"
 overrideConfiguration = False
 
 #number of CPUs / cores
-CPUs = 2
+CPUs = int(os.getenv('NUMBER_OF_PROCESSORS', '2'))
+print "Detected %s CPU(s)" % CPUs
 spawnList = []
 
 def run_crobots(logfile, logtype):

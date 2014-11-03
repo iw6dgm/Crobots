@@ -4,13 +4,14 @@
 """
 "CROBOTS" Crobots Batch Tournament Manager with DataBase support
 
-Version:        Python/1.2
+Version:        Python/1.2.1
 
                 Derived from Crobots.py 1.3
 
 Author:         Maurizio Camangi
 
 Version History:
+                Patch 1.2.1 Use os.devnull
                 Version 1.2 Use shutil and glob to build log files
                 Version 1.1 more compact iterations / combinations with
                 start / end offset
@@ -19,16 +20,22 @@ Version History:
 
 """
 
-import sys, imp, shlex, subprocess, time, shelve, os.path
+import sys
+import imp
+import shlex
+import subprocess
+import time
+import shelve
+import os.path
 from random import shuffle
-from itertools import combinations, islice
 from shutil import copyfileobj
 from glob import iglob
+
 
 # Global configuration variables
 
 #default stdin and stderr for crobots executable
-devNull = open("/dev/null",'rw')
+devNull = open(os.devnull)
 
 #command line strings
 robotPath = "%s/%s.ro"
@@ -39,7 +46,8 @@ countCmdLine = "count -p -t log/%s_%s >/dev/null 2>&1"
 overrideConfiguration = False
 
 #number of CPUs / cores
-CPUs = 2
+CPUs = int(os.getenv('NUMBER_OF_PROCESSORS', '2'))
+print "Detected %s CPU(s)" % CPUs
 spawnList = []
 LIMIT = sys.maxint
 
