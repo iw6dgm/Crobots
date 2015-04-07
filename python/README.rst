@@ -4,14 +4,19 @@ Crobots Batch Tournament Manager in Python
 Install
 -------
 
-Uncompress CrobotsPy.tgz in your Crobots folder. Make sure that the 'crobots' and
-'count' executables are reachable from your current shell (e.g. in $PATH env).
+Clone this repository. Make sure that 'crobots' executable is runnable from your current shell (e.g. in $PATH env).
 
 Setup
 -----
 
-According to your hardware / architecture, edit the Crobots.py and CrobotsDB.py scripts and set the correct CPUs variable with your CPU / core numbers. Unless you want to limit the CPU load you might use all of CPUs / cores available.
-If necessary, change the first script line with the correct Python executable path (e.g. *#!/usr/bin/env python*).
+These Python scripts try to auto-configure so you may not need any further change. If you do, edit your script and set the correct environment:
+
+* Environment variable NUMBER_OF_PROCESSORS tells how many cores / CPUs you have. If not set, Crobots Python scripts roll back that value to 2. If you need more, set manually NUMBER_OF_PROCESSORS (e.g. export NUMBER_OF_PROCESSORS=4 in your shell).
+
+* Set to a non-null value the environment variable CROBOTS_MYSQL if you want to make active the native MySQL support (you may need to install MySQLdb Python library) and edit CrobotsLibs.py accordingly with your database credentials.
+
+* If you don't want / don't have correctly configured a tmpfs pointing to /run/user/$UID (where $UID is your local user ID) edit your Crobots*.py scripts and change the tmpfs variable according to your current UNIX configuration.
+
 Make sure that your Crobots folder contains the *conf* and *db* directories.
 
 Configuration and run
@@ -34,4 +39,4 @@ Create a .py configuration file with the following rules:
 Compatibility
 -------------
 
-Successfully tested with Python 2.6.6 and 2.7.3.
+Successfully tested with Python 2.7.x on Linux Ubuntu.

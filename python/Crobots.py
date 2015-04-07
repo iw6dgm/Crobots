@@ -4,14 +4,15 @@
 """
 "CROBOTS" Crobots Batch Tournament Manager
 
-Version:        Python/1.4.1
+Version:        Python/1.5
 
                 Translated from 'run2012.sh' UNIX/bash to Python 2.7
 
 Author:         Maurizio Camangi
 
 Version History:
-                Version 1.4.1 Polish code - use os.devnull
+                Version 1.5 Count Python support
+                Version 1.4.2 Polish code - use os.devnull - no more </dev/null needed
                 Patch 1.3.1 Fix import
                 Version 1.3 Use more compact build_crobots_cmdline function
                 
@@ -32,7 +33,7 @@ import subprocess
 import time
 from random import shuffle
 from itertools import combinations
-
+from Count import parse_log_file, show_report
 
 # Global configuration variables
 
@@ -42,7 +43,6 @@ devNull = open(os.devnull)
 # command line strings
 robotPath = "%s/%s.ro"
 crobotsCmdLine = "crobots -m%s -l200000"
-countCmdLine = "count -p -t log/%s_%s"
 tmpLogFiles = "/tmp/tmp_%s_%s_%s.log"
 catTmpLogFiles = "cat /tmp/tmp_%s_*_%s.log >>log/%s_%s.log"
 logFilePath = "log/%s_%s.log"
@@ -64,7 +64,7 @@ def run_crobots(logfile, logtype):
     for i, s in enumerate(spawnList):
         try:
             tmpfile = open(os.path.normpath(tmpLogFiles % (logfile, i, logtype)), 'w')
-            procs.append(subprocess.Popen(shlex.split(s), stdin=devNull, stderr=devNull, stdout=tmpfile))
+            procs.append(subprocess.Popen(shlex.split(s), stderr=devNull, stdout=tmpfile))
         finally:
             tmpfile.close()
     # wait
@@ -97,8 +97,15 @@ def spawn_crobots_run(cmdLine, logfile, logtype):
 def run_count(logfile, logtype):
     """run the count log parser"""
     try:
-        os.system(countCmdLine % (logfile, logtype))
-        clean_up_log_file(logFilePath % (logfile, logtype))
+        logFile = logFilePath % (logfile, logtype)
+        txt = open(logFile, 'r')
+        lines = txt.readlines()
+        txt.close()
+
+        robots = parse_log_file(lines)
+        show_report(robots)
+
+        clean_up_log_file(logFile)
     except OSError, e:
         print e
 

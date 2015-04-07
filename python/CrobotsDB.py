@@ -4,13 +4,15 @@
 """
 "CROBOTS" Crobots Batch Tournament Manager with DataBase support
 
-Version:        Python/2.1
+Version:        Python/3.1
 
                 Derived from Crobots.py 1.3
 
 Author:         Maurizio Camangi
 
 Version History:
+                Version 3.1 Save match list into dbase using a custom key
+                Version 3.0 Added support for Count Python
                 Version 2.1 Added MySQL support - polish code
                 Version 2.0.2 Polish code - use os.devnull
                 Version 2.0 Use /run/user/{userid}/crobots as temp and log dir
@@ -35,28 +37,28 @@ from shutil import copyfileobj
 from glob import iglob
 
 import CrobotsLibs
-
+from Count import parse_log_file
 
 # Global configuration variables
 
 # databases
+STATUS_KEY = '__STATUS__'
 dbase = None
-dbstatus = None
 
 # default stdin and stderr for crobots executable
 devNull = open(os.devnull)
 
-#command line strings
+# command line strings
 robotPath = "%s/%s.ro"
 crobotsCmdLine = "crobots -m%s -l200000"
-countCmdLine = "count -p -t %s/%s_%s >/dev/null 2>&1"
+# countCmdLine = "count -p -t %s/%s_%s >/dev/null 2>&1"
 dbfile = "db/%s_%s.db"
 matches = {'f2f': 2, '3vs3': 3, '4vs4': 4}
 
-#if True overrides the Configuration class parameters
+# if True overrides the Configuration class parameters
 overrideConfiguration = False
 
-#number of CPUs / cores
+# number of CPUs / cores
 CPUs = int(os.getenv('NUMBER_OF_PROCESSORS', '2'))
 print "Detected %s CPU(s)" % CPUs
 spawnList = []
@@ -66,22 +68,22 @@ def run_crobots(tmppath, logpath, logfile, logtype):
     "spawn crobots command lines in subprocesses"
     global spawnList
     procs = []
-    #spawn processes
+    # spawn processes
     for i, s in enumerate(spawnList):
         try:
             with open("%s/tmp_%s_%s_%s.log" % (tmppath, logfile, i, logtype), 'w') as tmpfile:
-                procs.append(subprocess.Popen(shlex.split(s), stdin=devNull, stderr=devNull, stdout=tmpfile))
+                procs.append(subprocess.Popen(shlex.split(s), stderr=devNull, stdout=tmpfile))
         except OSError, e:
             print e
             raise SystemExit
-    #wait
+    # wait
     for proc in procs:
         proc.wait()
-    #check for errors
+    # check for errors
     if any(proc.returncode != 0 for proc in procs):
         print 'Something failed!'
         raise SystemExit
-    #aggregate log files
+    # aggregate log files
     try:
         with open('%s/%s_%s.log' % (logpath, logfile, logtype), 'a') as destination:
             logfiles = 'tmp_%s_*_%s.log' % (logfile, logtype)
@@ -91,7 +93,6 @@ def run_crobots(tmppath, logpath, logfile, logtype):
     except OSError, e:
         print e
         raise SystemExit
-    run_count(logpath, logfile, logtype)
     update_db(logpath, logfile, logtype)
     spawnList = []
 
@@ -102,15 +103,6 @@ def spawn_crobots_run(tmppath, cmdLine, logpath, logfile, logtype):
     spawnList.append(cmdLine)
     if len(spawnList) == CPUs:
         run_crobots(tmppath, logpath, logfile, logtype)
-
-
-def run_count(logpath, logfile, logtype):
-    "run the count log parser"
-    try:
-        os.system(countCmdLine % (logpath, logfile, logtype))
-        clean_up_log_file('%s/%s_%s.log' % (logpath, logfile, logtype))
-    except OSError, e:
-        print e
 
 
 def check_stop_file_exist():
@@ -154,7 +146,7 @@ def load_from_file(filepath):
     return class_inst
 
 
-#initialize database
+# initialize database
 def init_db(logfile, logtype):
     global configuration, dbase, dbfile
     filename = dbfile % (logfile, logtype)
@@ -171,97 +163,71 @@ def init_db(logfile, logtype):
 
 
 def close_db():
-    global dbase, dbstatus
-    if None != dbase:
+    global dbase
+    if dbase is not None:
         try:
             dbase.close()
         except:
             print "Error on closing local database: results may be corrupted..."
         finally:
             dbase = None
-    if None != dbstatus:
-        try:
-            dbstatus.close()
-        except:
-            print "Error on closing status database: results may be incomplete..."
-        finally:
-            dbstatus = None
     CrobotsLibs.close_connection()
 
 
-#initialize status
-def init_status(logfile, logtype):
-    global dbstatus, dbfile
-    filename = dbfile % ('status_' + logfile, logtype)
-    if not os.path.exists(filename):
+# initialize status
+def init_status(logtype):
+    global dbase
+    if not STATUS_KEY in dbase:
         print "Init local status database for %s" % logtype.upper()
-        dbstatus = shelve.open(filename, 'c')
         l = list(combinations(configuration.listRobots, matches[logtype]))
         shuffle(l)
-        dbstatus[logtype] = l
-        dbstatus.sync()
+        dbase[STATUS_KEY] = l
+        dbase.sync()
         CrobotsLibs.set_up(logtype)
-    else:
-        dbstatus = shelve.open(filename, 'w')
 
 
-#update database
+# update database
 def update_db(logpath, logfile, logtype):
     global dbase
-    txtfile = '%s/%s_%s.txt' % (logpath, logfile, logtype)
-    if not os.path.exists(txtfile):
-        print txtfile + ' does not exists!'
+    log = '%s/%s_%s.log' % (logpath, logfile, logtype)
+    if not os.path.exists(log):
+        print log + ' does not exists!'
         close_db()
         raise SystemExit
-    txt = open(txtfile, 'r')
+    txt = open(log, 'r')
     lines = txt.readlines()
     txt.close()
-    for r in lines:
-        if (len(r) > 60) and ('.' in r):
-            name = r[4:17].strip()
-            values = dbase[name]
-            values[0] += int(r[18:28].strip())
-            values[1] += int(r[28:37].strip())
-            values[2] += int(r[38:47].strip())
-            values[3] += int(r[58:68].strip())
-            dbase[name] = values
-            if CrobotsLibs.DATABASE_ENABLE:
-                CrobotsLibs.update_results(logtype, name, values[0], values[1], values[2], values[3])
+    robots = parse_log_file(lines)
+    for r in robots.values():
+        name = r[0]
+        values = dbase[name]
+        values[0] += r[1]
+        values[1] += r[2]
+        values[2] += r[3]
+        values[3] += r[4]
+        dbase[name] = values
+        if CrobotsLibs.DATABASE_ENABLE:
+            CrobotsLibs.update_results(logtype, name, values[0], values[1], values[2], values[3])
     dbase.sync()
-    #clean_up_log_file(txtfile)
+    clean_up_log_file(log)
 
 
-#save current status
-def save_status(l, logtype):
-    dbstatus[logtype] = l
-    dbstatus.sync()
+# save current status
+def save_status(l):
+    global dbase
+    dbase[STATUS_KEY] = l
+    dbase.sync()
 
 
-#show unordered results from database
-def show_results(logfile, logtype):
-    global dbfile
-    filename = dbfile % (logfile, logtype)
-    if not os.path.exists(filename):
-        print filename + ' does not exists!'
-        raise SystemExit
-    dbase = shelve.open(filename, 'r')
-    print 'Results %s for %s' % (logtype, logfile)
-    for r in dbase:
-        values = dbase[r]
-        print '%s\t\t%i\t\t%i\t\t%i\t\t%i' % (r, values[0], values[1], values[2], values[3])
-    dbase.close()
-
-
-#clean up database and status files
+# clean up database
 def cleanup(logfile, logtype):
     global dbfile
     clean_up_log_file(dbfile % (logfile, logtype))
-    clean_up_log_file(dbfile % ('status_' + logfile, logtype))
     print 'Clean up done %s %s' % (logfile, logtype.upper())
 
 
 if len(sys.argv) <> 3:
-    print "Usage : CrobotsDB.py <conf.py> [f2f|3vs3|4vs4|all|test|show|setup|clean]"
+    print "Usage : CrobotsDB.py <conf.py> [f2f|3vs3|4vs4|all|test|setup|clean]"
     raise SystemExit
 
 confFile = sys.argv[1]
@@ -289,8 +255,8 @@ if not os.path.exists(confFile):
     print 'Configuration file %s does not exist' % confFile
     raise SystemExit
 
-if not action in ['f2f', '3vs3', '4vs4', 'all', 'test', 'show', 'setup', 'clean']:
-    print 'Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test, show, setup, clean' % action
+if not action in ['f2f', '3vs3', '4vs4', 'all', 'test', 'setup', 'clean']:
+    print 'Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test, setup, clean' % action
     raise SystemExit
 
 try:
@@ -300,7 +266,7 @@ except Exception, e:
     print 'Invalid configuration py file %s' % confFile
     raise SystemExit
 
-if configuration == None:
+if configuration is None:
     print 'Invalid configuration py file %s' % confFile
     raise SystemExit
 
@@ -338,7 +304,7 @@ if action == 'setup':
     for a in ['f2f', '3vs3', '4vs4']:
         cleanup(configuration.label, a)
         init_db(configuration.label, a)
-        init_status(configuration.label, a)
+        init_status(a)
     close_db()
     raise SystemExit
 
@@ -348,28 +314,21 @@ if action == 'test':
     print 'Test completed!'
     raise SystemExit
 
-if action == 'show':
-    if os.path.exists(dbfile % (configuration.label, 'f2f')):
-        show_results(configuration.label, 'f2f')
-    if os.path.exists(dbfile % (configuration.label, '3vs3')):
-        show_results(configuration.label, '3vs3')
-    if os.path.exists(dbfile % (configuration.label, '4vs4')):
-        show_results(configuration.label, '4vs4')
-    raise SystemExit
 
 if check_stop_file_exist():
     print 'Crobots.stop file found! Exit application.'
+    close_db()
     raise SystemExit
 
 
 def run_tournament(ptype, matchParam):
-    global dbstatus, tmppath, logpath, robotPath, configuration, crobotsCmdLine
+    global tmppath, logpath, robotPath, configuration, crobotsCmdLine
     print '%s Starting %s... ' % (time.ctime(), ptype.upper())
     clean_up_log_file('%s/%s_%s.log' % (logpath, configuration.label, ptype))
     param = crobotsCmdLine % matchParam
     init_db(configuration.label, ptype)
-    init_status(configuration.label, ptype)
-    match_list = dbstatus[ptype]
+    init_status(ptype)
+    match_list = dbase[STATUS_KEY]
     list_length = len(match_list)
     counter = 0
     while counter < list_length:
@@ -379,14 +338,14 @@ def run_tournament(ptype, matchParam):
                               logpath,
                               configuration.label, ptype)
         counter += 1
-    if len(spawnList) > 0: run_crobots(tmppath, logpath, configuration.label, ptype)
-    run_count(logpath, configuration.label, ptype)
+    if len(spawnList) > 0:
+        run_crobots(tmppath, logpath, configuration.label, ptype)
     if check_stop_file_exist():
-        save_status(match_list, ptype)
+        save_status(match_list)
         close_db()
         print 'Crobots.stop file found! Exit application.'
         raise SystemExit
-    save_status(match_list, ptype)
+    save_status(match_list)
     print '%s %s completed!' % (time.ctime(), ptype.upper())
     close_db()
 

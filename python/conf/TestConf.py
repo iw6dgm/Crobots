@@ -4,4 +4,4 @@ class Configuration(object):
   match3VS3 = 4
   match4VS4 = 2
   sourcePath = 'test'
-  listRobots = ['hal9013', 'gerty3', 'wall-e_iv', 'jedi8', 'jedi9', 'jedi10', 'jedi11', 'jedi12']
+  listRobots = ['jedi8', 'jedi9', 'jedi10', 'jedi11', 'jedi12']
