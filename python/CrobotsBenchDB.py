@@ -32,7 +32,7 @@ from random import shuffle
 from shutil import copyfileobj
 from glob import iglob
 from Count import parse_log_file
-
+from CrobotsCPU import available_cpu_count
 
 # Global configuration variables
 # databases
@@ -51,7 +51,7 @@ crobotsCmdLine = "crobots -m%s -l200000 %s"
 overrideConfiguration = False
 
 # number of CPUs / cores
-CPUs = int(os.getenv('NUMBER_OF_PROCESSORS', '2'))
+CPUs = available_cpu_count()
 print "Detected %s CPU(s)" % CPUs
 spawnList = []
 

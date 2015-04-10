@@ -33,6 +33,7 @@ from random import shuffle
 from shutil import copyfileobj
 from glob import iglob
 from Count import parse_log_file
+from CrobotsCPU import available_cpu_count
 
 # Global configuration variables
 # databases
@@ -50,7 +51,7 @@ matches = {'f2f': 2, '3vs3': 3, '4vs4': 4}
 overrideConfiguration = False
 
 # number of CPUs / cores
-CPUs = int(os.getenv('NUMBER_OF_PROCESSORS', '2'))
+CPUs = available_cpu_count()
 print "Detected %s CPU(s)" % CPUs
 spawnList = []
 LIMIT = sys.maxint

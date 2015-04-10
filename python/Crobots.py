@@ -34,6 +34,7 @@ import time
 from random import shuffle
 from itertools import combinations
 from Count import parse_log_file, show_report
+from CrobotsCPU import available_cpu_count
 
 # Global configuration variables
 
@@ -51,7 +52,7 @@ logFilePath = "log/%s_%s.log"
 overrideConfiguration = False
 
 # number of CPUs / cores
-CPUs = int(os.getenv('NUMBER_OF_PROCESSORS', '2'))
+CPUs = available_cpu_count()
 print "Detected %s CPU(s)" % CPUs
 spawnList = []
 
