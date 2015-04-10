@@ -11,11 +11,11 @@ Setup
 
 These Python scripts try to auto-configure so you may not need any further change. If you do, edit your script and set the correct environment:
 
-* Environment variable NUMBER_OF_PROCESSORS tells how many cores / CPUs you have. If not set, Crobots Python scripts roll back that value to 2. If you need more, set manually NUMBER_OF_PROCESSORS (e.g. export NUMBER_OF_PROCESSORS=4 in your shell).
+* If you get an error whilst a Crobots*.py script tries to detect the number of available CPUs / cores, set manually the environment variable NUMBER_OF_PROCESSORS (e.g. export NUMBER_OF_PROCESSORS=4 in your shell).
 
 * Set to a non-null value the environment variable CROBOTS_MYSQL if you want to make active the native MySQL support (you may need to install MySQLdb Python library) and edit CrobotsLibs.py accordingly with your database credentials.
 
-* If you don't want / don't have correctly configured a tmpfs pointing to /run/user/$UID (where $UID is your local user ID) edit your Crobots*.py scripts and change the tmpfs variable according to your current UNIX configuration.
+* If you don't want / don't have correctly configured a tmpfs pointing to /run/user/$UID (where $UID is your local user ID) edit your Crobots*.py scripts and change the tmpfs variable according to your current UNIX configuration. WARNING: For long lasting elaborations which have a huge number of iterations and do not use a local database (e.g. Crobots.py, CrobotsBench.py) tmpfs (/run/user) filesystem disk space may be not enough. Think about an alternative folder instead (e.g. /tmp).
 
 Make sure that your Crobots folder contains the *conf* and *db* directories.
 
