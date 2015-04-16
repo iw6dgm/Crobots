@@ -37,7 +37,6 @@ from shutil import copyfileobj
 from glob import iglob
 import CrobotsLibs
 from Count import parse_log_file
-from CrobotsCPU import available_cpu_count
 
 # Global configuration variables
 
@@ -59,7 +58,7 @@ matches = {'f2f': 2, '3vs3': 3, '4vs4': 4}
 overrideConfiguration = False
 
 # number of CPUs / cores
-CPUs = available_cpu_count()
+CPUs = CrobotsLibs.available_cpu_count()
 print "Detected %s CPU(s)" % CPUs
 spawnList = []
 
@@ -313,7 +312,6 @@ if action == 'test':
     CrobotsLibs.close_connection()
     print 'Test completed!'
     raise SystemExit
-
 
 if check_stop_file_exist():
     print 'Crobots.stop file found! Exit application.'

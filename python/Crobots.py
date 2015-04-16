@@ -34,7 +34,7 @@ import time
 from random import shuffle
 from itertools import combinations
 from Count import parse_log_file, show_report
-from CrobotsCPU import available_cpu_count
+from CrobotsLibs import available_cpu_count
 
 # Global configuration variables
 

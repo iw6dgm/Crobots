@@ -32,7 +32,7 @@ from random import shuffle
 from shutil import copyfileobj
 from glob import iglob
 from Count import parse_log_file
-from CrobotsCPU import available_cpu_count
+from CrobotsLibs import available_cpu_count
 
 # Global configuration variables
 # databases
