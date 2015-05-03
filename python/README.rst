@@ -93,7 +93,6 @@ Examples:
     Crobots.py conf/MyConf.py f2f > results_f2f.txt
     Crobots.py conf/MyConf2.py all > results2_all.txt
 
-* First
 
 Run Crobots.py without command line parameters to read the help.
 
@@ -131,11 +130,11 @@ This script shows a sorted ranking from a tournament database file.
 
     CrobotsDBReport.py db/tournament_4vs4.db
 
+
 CrobotsBench.py
 ...............
 
-This script runs a partial tournament using all combinations of robots listed into the configuration file against a single robot to test.
- It does *not* support a database so it saves all the results within a text log file and prints out the final ranking to the standard output (console).
+This script runs a partial tournament using all combinations of robots listed into the configuration file against a single robot to test. It does *not* support a database so it saves all the results within a text log file and prints out the final ranking to the standard output (console).
 **Note**: It does *not* keep the text log files: they are deleted at the end of the tournament so bear in mind to save the output somewhere.
 Examples:
 
