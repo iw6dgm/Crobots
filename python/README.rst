@@ -182,8 +182,8 @@ Examples:
 
 ::
 
-    CrobotsBenchDBRandom.py conf/KOTHConf.py 3vs3
-    CrobotsBenchDBRandom.py conf/KOTHConf.py 4vs4
+    CrobotsBenchDBRandom.py conf/KOTHConf.py test/test.r 3vs3
+    CrobotsBenchDBRandom.py conf/KOTHConf.py test/test.r 4vs4
 
 
 Compatibility
