@@ -176,7 +176,7 @@ CrobotsBenchDBRandom.py
 
 A combination of *CrobotsBenchDB.py* and *CrobotsDBRandom.py*
 
-To test a single robot against a random combination of matches against a set of robots from the configuration file.
+To test a single robot against a random combination of matches.
 You can stop and resume a tournament later on. You can limit the number of combats changing the variable *LIMIT*.
 Examples:
 
