@@ -36,6 +36,7 @@ from CrobotsLibs import available_cpu_count
 
 # Global configuration variables
 # databases
+dbfilename = 'db/%s_%s_%s.db'
 STATUS_KEY = '__STATUS__'
 dbase = None
 matches = {'f2f': 1, '3vs3': 2, '4vs4': 3}
@@ -141,11 +142,12 @@ def load_from_file(filepath):
 
 # initialize database
 def init_db(logfile, logtype):
-    global configuration, startStatus, dbase
-    dbfile = 'db/%s_%s.db' % (logfile, logtype)
+    global configuration, startStatus, dbase, robotTest, dbfilename
+    robotName = os.path.basename(robotTest)[:-3]
+    dbfile = dbfilename % (logfile, robotName, logtype)
     if not os.path.exists(dbfile):
         dbase = shelve.open(dbfile, 'c')
-        dbase[os.path.basename(robotTest)[:-3]] = [0, 0, 0, 0]
+        dbase[robotName] = [0, 0, 0, 0]
         for s in configuration.listRobots:
             key = os.path.basename(s)
             dbase[key] = [0, 0, 0, 0]
@@ -209,9 +211,10 @@ def save_status(l):
 
 # clean up database and status files
 def cleanup(logfile, logtype):
-    for s in ['db/%s_%s.db', 'db/status_%s_%s.txt']:
-        clean_up_log_file(s % (logfile, logtype))
-    print 'Clean up done %s %s!' % (logfile, logtype)
+    global dbfilename, robotTest
+    robotName = os.path.basename(robotTest)[:-3]
+    clean_up_log_file(dbfilename % (logfile, robotName, logtype))
+    print 'Clean up done %s %s %s!' % (logfile, robotName, logtype)
 
 
 if len(sys.argv) <> 4:
