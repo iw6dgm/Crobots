@@ -298,15 +298,15 @@ def run_tournament(ptype, matchParam):
     init_db(configuration.label, ptype)
     temp = configuration.listRobots
     counter = 0
-    while not check_stop_file_exist() and counter < LIMIT:
+    while (not check_stop_file_exist()) and (counter < LIMIT):
         for r in peek(temp, matches[ptype]):
             build_crobots_cmdline(tmppath, param, [robotPath % (configuration.sourcePath, s) for s in r],
                                   logpath,
                                   configuration.label,
                                   ptype)
             counter += 1
-    if len(spawnList) > 0:
-        run_crobots(tmppath, logpath, configuration.label, ptype)
+            if counter == LIMIT:
+                break
     if check_stop_file_exist():
         print 'Crobots.stop file found! Exit application.'
         close_db()
