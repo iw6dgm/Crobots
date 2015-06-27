@@ -45,7 +45,7 @@ devNull = open(os.devnull)
 # command line strings
 robotPath = "%s/%s.ro"
 crobotsCmdLine = "crobots -m%s -l200000"
-matches = {'f2f': 2, '3vs3': 3, '4vs4': 4}
+matches = {'3vs3': 3, '4vs4': 4}
 
 # if True overrides the Configuration class parameters
 overrideConfiguration = False
@@ -161,8 +161,14 @@ def init_db(logfile, logtype):
             key = os.path.basename(s)
             dbase[key] = [0, 0, 0, 0]
         dbase.sync()
+        return 0
     else:
         dbase = shelve.open(dbfile, 'w')
+        c = 0
+        for r in dbase:
+            values = dbase[r]
+            c += values[0]
+        return c
 
 
 # update database
@@ -202,13 +208,12 @@ def close_db():
 
 # clean up database and status files
 def cleanup(logfile, logtype):
-    for s in ['db/%s_%s.db', 'db/status_%s_%s.txt']:
-        clean_up_log_file(s % (logfile, logtype))
+    clean_up_log_file('db/%s_%s.db' % (logfile, logtype))
     print 'Clean up done %s %s!' % (logfile, logtype)
 
 
 if len(sys.argv) <> 3:
-    print "Usage : CrobotsDB.py <conf.py> [f2f|3vs3|4vs4|all|test|clean]"
+    print "Usage : CrobotsDB.py <conf.py> [3vs3|4vs4|all|test|clean]"
     raise SystemExit
 
 confFile = sys.argv[1]
@@ -236,8 +241,12 @@ if not os.path.exists(confFile):
     print 'Configuration file %s does not exist' % confFile
     raise SystemExit
 
-if not action in ['f2f', '3vs3', '4vs4', 'all', 'test', 'clean']:
-    print 'Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test, clean' % action
+if action not in ['3vs3', '4vs4', 'all', 'test', 'clean']:
+    print 'Invalid parameter %s. Valid values are 3vs3, 4vs4, all, test, clean' % action
+    raise SystemExit
+
+if 'clean' != action and LIMIT < CPUs:
+    print 'Invalid match LIMIT: min value is %s' % CPUs
     raise SystemExit
 
 try:
@@ -258,7 +267,6 @@ if len(configuration.listRobots) == 0:
 if overrideConfiguration:
     print 'Override configuration...'
     configuration.label = 'test'
-    configuration.matchF2F = 500
     configuration.match3VS3 = 8
     configuration.match4VS4 = 1
     configuration.sourcePath = 'test'
@@ -275,7 +283,7 @@ for r in configuration.listRobots:
 print 'OK!'
 
 if action == 'clean':
-    for a in ['f2f', '3vs3', '4vs4']:
+    for a in ['3vs3', '4vs4']:
         cleanup(configuration.label, a)
     raise SystemExit
 
@@ -291,32 +299,29 @@ if check_stop_file_exist():
 
 
 def run_tournament(ptype, matchParam):
-    global countCmdLine, matches, tmppath, logpath
+    global countCmdLine, matches, tmppath, logpath, LIMIT
     print '%s Starting %s... ' % (time.ctime(), ptype.upper())
     clean_up_log_file('%s/%s_%s.log' % (logpath, configuration.label, ptype))
     param = crobotsCmdLine % matchParam
-    init_db(configuration.label, ptype)
     temp = configuration.listRobots
-    counter = 0
-    while not check_stop_file_exist() and counter < LIMIT:
-        for r in peek(temp, matches[ptype]):
+    counter = init_db(configuration.label, ptype)
+    print '%s matches found on db...' % counter
+    n = matches[ptype]
+    while (not check_stop_file_exist()) and (counter < LIMIT):
+        for r in peek(temp, n):
             build_crobots_cmdline(tmppath, param, [robotPath % (configuration.sourcePath, s) for s in r],
                                   logpath,
                                   configuration.label,
                                   ptype)
-            counter += 1
-    if len(spawnList) > 0:
-        run_crobots(tmppath, logpath, configuration.label, ptype)
+            counter += matchParam
+            if counter >= LIMIT:
+                break
     if check_stop_file_exist():
         print 'Crobots.stop file found! Exit application.'
         close_db()
         raise SystemExit
     print '%s %s completed!' % (time.ctime(), ptype.upper())
     close_db()
-
-
-if action in ['f2f', 'all']:
-    run_tournament('f2f', configuration.matchF2F)
 
 if action in ['3vs3', 'all']:
     run_tournament('3vs3', configuration.match3VS3)
