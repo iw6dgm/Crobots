@@ -16,10 +16,10 @@ public class RunnableCrobotsThread implements Runnable {
 
     private static final Logger logger = Logger.getLogger(RunnableCrobotsThread.class.getName());
     private static SharedVariables sharedVariables = SharedVariables.getInstance();
-    private String threadName;
-    private TableName tableName;
-    private Integer numOfMatch;
-    private Manager manager;
+    private final String threadName;
+    private final TableName tableName;
+    private final Integer numOfMatch;
+    private final Manager manager;
     private String[] outCmd;
     //private SQLManager mySQLManager;
 
@@ -28,6 +28,8 @@ public class RunnableCrobotsThread implements Runnable {
         this.threadName = threadName;
         this.tableName = tableName;
         this.outCmd = new String[tableName.getNumOfOpponents()];
+        this.numOfMatch = sharedVariables.getNumOfMatch(tableName);
+        this.manager = new Manager.Builder(tableName.getNumOfOpponents()).build();
     }
     /*
      * Notify the manager which updates the results
@@ -127,9 +129,8 @@ public class RunnableCrobotsThread implements Runnable {
             int idles = 0;
             long startTime = System.currentTimeMillis();
             logger.log(Level.INFO, "Starting thread : {0}", threadName);
-            manager = new Manager.Builder(tableName.getNumOfOpponents()).build();
             logger.log(Level.INFO, "Retrieving {0} parameters...", tableName.getTableName().toUpperCase());
-            numOfMatch = sharedVariables.getNumOfMatch(tableName);
+
             if (numOfMatch == 0) {
                 logger.log(Level.SEVERE, "Error retrieving {0} parameters!", tableName.getTableName().toUpperCase());
                 throw new InterruptedException("Thread " + threadName + " interrupted!");
