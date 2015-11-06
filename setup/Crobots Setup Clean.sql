@@ -146,7 +146,7 @@ DELIMITER ;
 DELIMITER $$
 
 DROP PROCEDURE IF EXISTS `crobots`.`pSelect4vs4` $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE `pSelect4vs4`(
+CREATE DEFINER=`crobots`@`localhost` PROCEDURE `pSelect4vs4`(
 IN buffersize INTEGER
 )
 BEGIN
@@ -164,13 +164,50 @@ DROP PROCEDURE IF EXISTS `crobots`.`pTest`;
 DELIMITER $$
 
 /*!50003 SET @TEMP_SQL_MODE=@@SQL_MODE, SQL_MODE='STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER' */ $$
-CREATE DEFINER=`root`@`localhost` PROCEDURE  `crobots`.`pTest`()
+CREATE DEFINER=`crobots`@`localhost` PROCEDURE  `crobots`.`pTest`()
 BEGIN
   SELECT now();
 END $$
 /*!50003 SET SESSION SQL_MODE=@TEMP_SQL_MODE */  $$
 
 DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`crobots`@`%` PROCEDURE `pSetupResultsF2F`()
+BEGIN
+TRUNCATE TABLE results_f2f;
+INSERT INTO results_f2f(robot)
+SELECT lower(LEFT(name,character_length(name)-2)) AS robot
+FROM robots
+WHERE status=2;
+COMMIT;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`crobots`@`%` PROCEDURE `pSetupResults3VS3`()
+BEGIN
+TRUNCATE TABLE results_3vs3;
+INSERT INTO results_3vs3(robot)
+SELECT lower(LEFT(name,character_length(name)-2)) AS robot
+FROM robots
+WHERE status=2;
+COMMIT;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`crobots`@`%` PROCEDURE `pSetupResults4VS4`()
+BEGIN
+TRUNCATE TABLE results_4vs4;
+INSERT INTO results_4vs4(robot)
+SELECT lower(LEFT(name,character_length(name)-2)) AS robot
+FROM robots
+WHERE status=2;
+COMMIT;
+END$$
+DELIMITER ;
+
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

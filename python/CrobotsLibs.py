@@ -17,7 +17,7 @@ if DATABASE_ENABLE:
 
     print "MySQL database enabled"
 
-P_SETUPUP = "call pSetupResults%s"
+P_SETUPUP = "call pSetupResults%s()"
 P_CLEANUP = "TRUNCATE TABLE results_%s"
 UPDATE_SQL = "UPDATE results_%s SET games=%s, wins=%s, ties=%s, points=%s WHERE robot='%s'"
 
