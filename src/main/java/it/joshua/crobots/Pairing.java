@@ -6,7 +6,11 @@ package it.joshua.crobots;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * @author mcamangi
@@ -40,8 +44,8 @@ public class Pairing {
     private static List<String> aminet = new ArrayList<>(8);
     private static List<String> cplusplus = new ArrayList<>(2);
     private static List<List<String>> tournaments = new ArrayList<>(25);
-    private static List<String> round = new ArrayList<>();
-    private static List<List<String>> rounds = new ArrayList<>();
+    private static Set<String> round;
+    private static List<Set<String>> rounds;
     private static boolean withConflicts;
     private static int robots;
 
@@ -53,12 +57,10 @@ public class Pairing {
         countRobots();
         int attempts = 0;
         do {
-            withConflicts = false;
             System.out.println("ATTEMPT : " + ++attempts);
             shuffle();
             collect();
-            alternativePairing();
-            checkConflicts();
+            withConflicts = alternativePairing();
         } while (withConflicts);
         show();
         buildConfigFile();
@@ -68,36 +70,17 @@ public class Pairing {
      * @param filename
      * @return file basename (no path)
      */
-    private static String getBasename(String filename) {
+    private static String getBasename(final String filename) {
         File f = new File(filename);
         return f.getName();
     }
 
-    private static void checkConflicts() {
-        for (final List<String> round : rounds) {
-            final List<String> nameArray = new ArrayList<>();
-            String baseName;
-            for (final String s : round) {
-                baseName = getBasename(s);
-                if (nameArray.contains(baseName)) {
-                    withConflicts = true;
-                    break;
-                } else {
-                    nameArray.add(baseName);
-                }
-            }
-            if (withConflicts) {
-                break;
-            }
-        }
-    }
-    
     /** 
      * Show pairings (plain text)
      */
     private static void show() {
         int n = 1;
-        for (final List<String> round : rounds) {
+        for (final Set<String> round : rounds) {
             if (round != null && round.size() > 0) {
                 System.out.println("------- Group " + n++ + " ------");
                 for (final String s : round) {
@@ -112,12 +95,12 @@ public class Pairing {
      */
     private static void buildConfigFile() {
         int n = 1;
-        for (List<String> round : rounds) {
+        for (Set<String> round : rounds) {
             int count = 0;
             if (round != null && round.size() > 0) {
                 System.out.println("------- CFG " + n + " ------");
                 System.out.println("\tlabel='group" + n+++"'");
-                StringBuilder sb = new StringBuilder("\tlistRobots=[");
+                final StringBuilder sb = new StringBuilder("\tlistRobots=[");
                 for (String s : round) {
                     if (count++ != 0) {
                         sb.append(", ");
@@ -190,7 +173,7 @@ public class Pairing {
         System.out.println("TOTAL Robots :" + robots);
     }
 
-    private static void alternativePairing() {
+    private static boolean alternativePairing() {
         int groupCount = (robots / GROUP_SIZE) + ((robots % GROUP_SIZE) > 0 ? 1 : 0);
 
         int groupIndex = 0;
@@ -198,19 +181,22 @@ public class Pairing {
         rounds = new ArrayList<>();
 
         for (int i = 0; i < groupCount; i++) {
-            round = new ArrayList<>();
+            round = new TreeSet<>(RobotComparator.getInstance());
             rounds.add(round);
         }
 
         for (final List<String> tournament : tournaments) {
             for (final String r : tournament) {
-                rounds.get(groupIndex++).add(r);
+                if (!rounds.get(groupIndex++).add(r)) {
+                    return true; // has conflicts
+                }
                 if (groupIndex == groupCount) {
                     groupIndex = 0;
                 }
             }
         }
 
+        return false; // no conflicts
     }
 
     private static void shuffle() {
@@ -2704,5 +2690,19 @@ public class Pairing {
         micro.add("micro/zzz");
 
         System.out.println(micro.size() + " robot(s)");
+    }
+
+    private static class RobotComparator implements Comparator<String> {
+
+        private static final RobotComparator INSTANCE = new RobotComparator();
+
+        @Override
+        public int compare(String o1, String o2) {
+            return getBasename(o1).compareTo(getBasename(o2));
+        }
+
+        public static RobotComparator getInstance() {
+            return INSTANCE;
+        }
     }
 }
