@@ -980,6 +980,38 @@ public class Pairing {
         torneo2013.add("2013/wall-e_iv");
         
         System.out.println(torneo2013.size() + " robot(s)");
+        System.out.print("Loading torneo2015... ");
+
+        torneo2015.add("2015/antman");
+        torneo2015.add("2015/aswhup");
+//        torneo2015.add("2015/avoider");
+        torneo2015.add("2015/babadook");
+        torneo2015.add("2015/circles15");
+        torneo2015.add("2015/colour");
+        torneo2015.add("2015/coppi15mc1");
+        torneo2015.add("2015/coppi15md1");
+        torneo2015.add("2015/flash9");
+        torneo2015.add("2015/frank15");
+        torneo2015.add("2015/gerty4");
+        torneo2015.add("2015/hal9015");
+        torneo2015.add("2015/hulk");
+        torneo2015.add("2015/linabo15");
+        torneo2015.add("2015/lluke");
+        torneo2015.add("2015/mcfly");
+        torneo2015.add("2015/mike3");
+        torneo2015.add("2015/pippo15a");
+        torneo2015.add("2015/pippo15b");
+        torneo2015.add("2015/puppet");
+        torneo2015.add("2015/randguard");
+        torneo2015.add("2015/salippo");
+        torneo2015.add("2015/sidewalk");
+        torneo2015.add("2015/thor");
+        torneo2015.add("2015/tux");
+        torneo2015.add("2015/tyrion");
+        torneo2015.add("2015/wall-e_v");
+
+
+        System.out.println(torneo2015.size() + " robot(s)");
         System.out.print("Loading crobs... ");
 
         crobs.add("crobs/adversar");
@@ -1533,8 +1565,30 @@ public class Pairing {
         torneo2013.add("2013/pippo13b");
         torneo2013.add("2013/pray");
         torneo2013.add("2013/wall-e_iv");
-        
+
         System.out.println(torneo2013.size() + " robot(s)");
+        System.out.print("Loading torneo2015... ");
+
+        torneo2015.add("2015/antman");
+        torneo2015.add("2015/aswhup");
+//        torneo2015.add("2015/avoider");
+        torneo2015.add("2015/babadook");
+        torneo2015.add("2015/colour");
+        torneo2015.add("2015/coppi15mc1");
+        torneo2015.add("2015/flash9");
+        torneo2015.add("2015/linabo15");
+        torneo2015.add("2015/mike3");
+        torneo2015.add("2015/pippo15a");
+        torneo2015.add("2015/pippo15b");
+        torneo2015.add("2015/puppet");
+        torneo2015.add("2015/randguard");
+        torneo2015.add("2015/salippo");
+        torneo2015.add("2015/sidewalk");
+        torneo2015.add("2015/tux");
+        torneo2015.add("2015/tyrion");
+        torneo2015.add("2015/wall-e_v");
+
+        System.out.println(torneo2015.size() + " robot(s)");
         System.out.print("Loading crobs... ");
 
         crobs.add("crobs/adversar");
