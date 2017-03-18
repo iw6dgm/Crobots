@@ -99,8 +99,13 @@ public class Pairing {
             int count = 0;
             if (round != null && round.size() > 0) {
                 System.out.println("------- CFG " + n + " ------");
-                System.out.println("\tlabel='group" + n+++"'");
-                final StringBuilder sb = new StringBuilder("\tlistRobots=[");
+                System.out.println("class Configuration(object):");
+                System.out.println("\tmatchF2F = 1000\n" +
+                        "\tmatch3VS3 = 15\n" +
+                        "\tmatch4VS4 = 1\n" +
+                        "\tsourcePath = '.'");
+                System.out.println("\tlabel = 'group" + n+++"'");
+                final StringBuilder sb = new StringBuilder("\tlistRobots = [");
                 for (String s : round) {
                     if (count++ != 0) {
                         sb.append(", ");
