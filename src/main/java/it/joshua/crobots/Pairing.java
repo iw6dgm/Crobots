@@ -18,6 +18,9 @@ import java.util.TreeSet;
  */
 public class Pairing {
     private final static int GROUP_SIZE = 64; //Desired group size
+    private static final int matchF2F = 2000;
+    private static final int match3vs3 = 17;
+    private static final int match4vs4 = 1;
     private static List<String> torneo90 = new ArrayList<>(8);
     private static List<String> torneo91 = new ArrayList<>(23);
     private static List<String> torneo92 = new ArrayList<>(56);
@@ -100,11 +103,8 @@ public class Pairing {
             if (round != null && round.size() > 0) {
                 System.out.println("------- CFG " + n + " ------");
                 System.out.println("class Configuration(object):");
-                System.out.println("\tmatchF2F = 1000\n" +
-                        "\tmatch3VS3 = 15\n" +
-                        "\tmatch4VS4 = 1\n" +
-                        "\tsourcePath = '.'");
-                System.out.println("\tlabel = 'group" + n+++"'");
+                System.out.printf("\tmatchF2F = %d\n\tmatch3VS3 = %d\n\tmatch4VS4 = %d\n\tsourcePath = '.'\n", matchF2F, match3vs3, match4vs4);
+                System.out.printf("\tlabel = 'group%d'\n", n++);
                 final StringBuilder sb = new StringBuilder("\tlistRobots = [");
                 for (String s : round) {
                     if (count++ != 0) {
