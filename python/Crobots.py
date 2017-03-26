@@ -4,23 +4,24 @@
 """
 "CROBOTS" Crobots Batch Tournament Manager
 
-Version:        Python/1.5
+Version:        Python/1.6
 
                 Translated from 'run2012.sh' UNIX/bash to Python 2.7
 
 Author:         Maurizio Camangi
 
 Version History:
+                Version 1.6 Return error code on SystemExit after Exception
                 Version 1.5 Count Python support
                 Version 1.4.2 Polish code - use os.devnull - no more </dev/null needed
                 Patch 1.3.1 Fix import
                 Version 1.3 Use more compact build_crobots_cmdline function
-                
+
                 Version 1.2 Use more compact combinations from itertools
 
                 Version 1.1 is the first stable version
                 (corresponds to bash/v.1.2c)
-                
+
                 Add multiple CPUs / cores management
 
 """
@@ -72,8 +73,7 @@ def run_crobots(tmppath, logpath, logfile, logtype):
         proc.wait()
     # check for errors
     if any(proc.returncode != 0 for proc in procs):
-        print 'Something failed!'
-        raise SystemExit
+        raise SystemExit('Something failed!')
     # aggregate log files
     try:
         with open(os.path.normpath('%s/%s_%s.log' % (logpath, logfile, logtype)), 'a') as destination:
@@ -82,8 +82,7 @@ def run_crobots(tmppath, logpath, logfile, logtype):
                 copyfileobj(open(filename, 'r'), destination)
                 clean_up_log_file(filename)
     except OSError, e:
-        print e
-        raise SystemExit
+        raise SystemExit(e)
     # clean up temporary log files
     for i in xrange(len(spawnList)):
         clean_up_log_file(os.path.normpath("%s/tmp_%s_%s_%s.log" % (tmppath, logfile, i, logtype)))
@@ -156,8 +155,7 @@ def load_from_file(filepath):
 
 
 if len(sys.argv) <> 3:
-    print "Usage : Crobots.py <conf.py> [f2f|3vs3|4vs4|all|test]"
-    raise SystemExit
+    raise SystemExit("Usage : Crobots.py <conf.py> [f2f|3vs3|4vs4|all|test]")
 
 confFile = sys.argv[1]
 action = sys.argv[2]
@@ -176,32 +174,24 @@ try:
     if not os.path.exists(tmppath):
         os.makedirs(tmppath)
 except Exception, e:
-    print e
-    print 'Unable to create temp %s and %s' % (logpath, tmppath)
-    raise SystemExit
+    raise SystemExit('Unable to create temp %s and %s: %s' % (logpath, tmppath, e))
 
 if not os.path.exists(confFile):
-    print 'Configuration file %s does not exist' % confFile
-    raise SystemExit
+    raise SystemExit('Configuration file %s does not exist' % confFile)
 
 if not action in ['f2f', '3vs3', '4vs4', 'all', 'test']:
-    print 'Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test' % action
-    raise SystemExit
+    raise SystemExit('Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test' % action)
 
 try:
     configuration = load_from_file(confFile)
 except Exception, e:
-    print e
-    print 'Invalid configuration py file %s' % confFile
-    raise SystemExit
+    raise SystemExit('Invalid configuration py file %s: %s' % (confFile, e))
 
 if configuration is None:
-    print 'Invalid configuration py file %s' % confFile
-    raise SystemExit
+    raise SystemExit('Invalid configuration py file %s' % confFile)
 
 if len(configuration.listRobots) == 0:
-    print 'List of robots empty!'
-    raise SystemExit
+    raise SystemExit('List of robots empty!')
 
 if overrideConfiguration:
     print 'Override configuration...'
@@ -217,8 +207,7 @@ print 'Test opponents... ',
 for r in configuration.listRobots:
     robot = robotPath % (configuration.sourcePath, r)
     if not os.path.exists(os.path.normpath(robot)):
-        print 'Robot file %s does not exist.' % robot
-        sys.exit(1)
+        raise SystemExit('Robot file %s does not exist.' % robot)
 
 print 'OK!'
 
@@ -250,4 +239,3 @@ if action in ['4vs4', 'all']:
     run_tournament('4vs4', 4, configuration.match4VS4)
 
 devNull.close()
-

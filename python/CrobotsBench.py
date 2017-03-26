@@ -4,13 +4,14 @@
 """
 "CROBOTS" Crobots Batch Bench Manager to test one single robot
 
-Version:        Python/1.3
+Version:        Python/1.4
 
                 Derived from Crobots.py 1.3.1
 
 Author:         Maurizio Camangi
 
 Version History:
+                Version 1.4 Return error code on SystemExit after Exception
                 Version 1.3 Count Python support
                 Version 1.2 Use /run/user as log and tmp directory
                 Patch 1.1.1 Use os.devnull
@@ -60,15 +61,13 @@ def run_crobots(tmppath, logpath, logfile, logtype):
             with open("%s/tmp_%s_%s_%s.log" % (tmppath, logfile, i, logtype), 'w') as tmpfile:
                 procs.append(subprocess.Popen(shlex.split(s), stdin=devNull, stderr=devNull, stdout=tmpfile))
         except OSError, e:
-            print e
-            raise SystemExit
+            raise SystemExit(e)
     # wait
     for proc in procs:
         proc.wait()
     # check for errors
     if any(proc.returncode != 0 for proc in procs):
-        print 'Something failed!'
-        raise SystemExit
+        raise SystemExit('Something failed!')
     # aggregate log files
     try:
         with open('%s/%s_%s.log' % (logpath, logfile, logtype), 'a') as destination:
@@ -77,8 +76,7 @@ def run_crobots(tmppath, logpath, logfile, logtype):
                 copyfileobj(open(filename, 'r'), destination)
                 clean_up_log_file(filename)
     except OSError, e:
-        print e
-        raise SystemExit
+        raise SystemExit(e)
     spawnList = []
 
 
@@ -148,8 +146,7 @@ def load_from_file(filepath):
 
 
 if len(sys.argv) <> 4:
-    print "Usage : CrobotsBench.py <conf.py> <robot.r> [f2f|3vs3|4vs4|all|test]"
-    raise SystemExit
+    raise SystemExit("Usage : CrobotsBench.py <conf.py> <robot.r> [f2f|3vs3|4vs4|all|test]")
 
 confFile = sys.argv[1]
 robotTest = sys.argv[2]
@@ -169,32 +166,24 @@ try:
     if not os.path.exists(tmppath):
         os.makedirs(tmppath)
 except Exception, e:
-    print e
-    print 'Unable to create temp %s and %s' % (logpath, tmppath)
-    raise SystemExit
+    raise SystemExit('Unable to create temp %s and %s: %s' % (logpath, tmppath, e))
 
 if not os.path.exists(confFile):
-    print 'Configuration file %s does not exist' % confFile
-    raise SystemExit
+    raise SystemExit('Configuration file %s does not exist' % confFile)
 
 if not action in ['f2f', '3vs3', '4vs4', 'all', 'test']:
-    print 'Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test' % action
-    raise SystemExit
+    raise SystemExit('Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test' % action)
 
 try:
     configuration = load_from_file(confFile)
 except Exception, e:
-    print e
-    print 'Invalid configuration py file %s' % confFile
-    raise SystemExit
+    raise SystemExit('Invalid configuration py file %s: %s' % (confFile, e))
 
 if configuration == None:
-    print 'Invalid configuration py file %s' % confFile
-    raise SystemExit
+    raise SystemExit('Invalid configuration py file %s' % confFile)
 
 if len(configuration.listRobots) == 0:
-    print 'List of robots empty!'
-    raise SystemExit
+    raise SystemExit('List of robots empty!')
 
 if overrideConfiguration:
     print 'Override configuration...'
@@ -210,21 +199,18 @@ print 'Test opponents... ',
 for r in configuration.listRobots:
     robot = robotPath % (configuration.sourcePath, r)
     if not os.path.exists(robot):
-        print 'Robot file %s does not exist.' % robot
-        sys.exit(1)
+        raise SystemExit('Robot file %s does not exist.' % robot)
 
 print 'OK!'
 
 if not os.path.exists(robotTest):
-    print 'Robot %s does not exist' % robotTest
-    raise SystemExit
+    raise SystemExit('Robot %s does not exist' % robotTest)
 else:
     print 'Compiling %s ...' % robotTest,
     clean_up_log_file(robotTest + 'o')
     os.system("crobots -c %s </dev/null >/dev/null 2>&1" % robotTest)
     if not os.path.exists(robotTest + 'o'):
-        print 'Robot %s does not compile' % robotTest
-        raise SystemExit
+        raise SystemExit('Robot %s does not compile' % robotTest)
 
 print 'OK!'
 robotTest += 'o'
@@ -272,4 +258,3 @@ if action in ['4vs4', 'all']:
     print '%s 4VS4 completed!' % time.ctime()
 
 devNull.close()
-

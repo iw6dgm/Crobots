@@ -105,8 +105,7 @@ def cleanup(filepath):
 
 
 if len(sys.argv) <> 6:
-    print "Usage : CrobotsMergeDB.py <conf.py> <db1> <db2> <dbout> [merge|clean]"
-    raise SystemExit
+    raise SystemExit("Usage : CrobotsMergeDB.py <conf.py> <db1> <db2> <dbout> [merge|clean]")
 
 confFile = sys.argv[1]
 dbase1 = sys.argv[2]
@@ -115,31 +114,25 @@ dbaseout = sys.argv[4]
 action = sys.argv[5]
 
 if not os.path.exists(confFile):
-    print 'Configuration file %s does not exist' % confFile
-    raise SystemExit
+    raise SystemExit('Configuration file %s does not exist' % confFile)
 
 if any(not os.path.exists(db) for db in (dbase1, dbase2)):
-    print 'Source databasas do not exist'
-    raise SystemExit
+    raise SystemExit('Source databasas do not exist')
 
 if not action in ['merge', 'clean']:
-    print 'Invalid parameter %s. Valid values are merge, clean' % action
-    raise SystemExit
+    raise SystemExit('Invalid parameter %s. Valid values are merge, clean' % action)
 
 try:
     configuration = load_from_file(confFile)
 except Exception, e:
-    print e
-    print 'Invalid configuration py file %s' % confFile
-    raise SystemExit
+    raise SystemExit('Invalid configuration py file %s: %s' % (confFile, e))
 
 if configuration == None:
     print 'Invalid configuration py file %s' % confFile
     raise SystemExit
 
 if len(configuration.listRobots) == 0:
-    print 'List of robots empty!'
-    raise SystemExit
+    raise SystemExit('List of robots empty!')
 
 print 'List size = %d' % len(configuration.listRobots)
 
@@ -151,4 +144,3 @@ if action == 'merge':
     init_db(dbaseout)
     update_db()
     print 'Merge done!'
-

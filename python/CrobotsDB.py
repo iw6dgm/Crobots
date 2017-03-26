@@ -4,13 +4,14 @@
 """
 "CROBOTS" Crobots Batch Tournament Manager with DataBase support
 
-Version:        Python/3.1
+Version:        Python/3.2
 
                 Derived from Crobots.py 1.3
 
 Author:         Maurizio Camangi
 
 Version History:
+                Version 3.2 Return error code on SystemExit after Exception
                 Version 3.1 Save match list into dbase using a custom key
                 Version 3.0 Added support for Count Python
                 Version 2.1 Added MySQL support - polish code
@@ -19,7 +20,7 @@ Version History:
                 Version 1.2 Use shutil and glob to build log files
                 Version 1.1 more compact iterations / combinations with
                 start / end offset
-                
+
                 Version 1.0 is the first stable version
 
 """
@@ -73,15 +74,13 @@ def run_crobots(tmppath, logpath, logfile, logtype):
             with open("%s/tmp_%s_%s_%s.log" % (tmppath, logfile, i, logtype), 'w') as tmpfile:
                 procs.append(subprocess.Popen(shlex.split(s), stderr=devNull, stdout=tmpfile))
         except OSError, e:
-            print e
-            raise SystemExit
+            raise SystemExit(e)
     # wait
     for proc in procs:
         proc.wait()
     # check for errors
     if any(proc.returncode != 0 for proc in procs):
-        print 'Something failed!'
-        raise SystemExit
+        raise SystemExit('Something failed!')
     # aggregate log files
     try:
         with open('%s/%s_%s.log' % (logpath, logfile, logtype), 'a') as destination:
@@ -90,8 +89,7 @@ def run_crobots(tmppath, logpath, logfile, logtype):
                 copyfileobj(open(filename, 'r'), destination)
                 clean_up_log_file(filename)
     except OSError, e:
-        print e
-        raise SystemExit
+        raise SystemExit(e)
     update_db(logpath, logfile, logtype)
     spawnList = []
 
@@ -190,9 +188,8 @@ def update_db(logpath, logfile, logtype):
     global dbase
     log = '%s/%s_%s.log' % (logpath, logfile, logtype)
     if not os.path.exists(log):
-        print log + ' does not exists!'
         close_db()
-        raise SystemExit
+        raise SystemExit('%s does not exists!' % log)
     txt = open(log, 'r')
     lines = txt.readlines()
     txt.close()
@@ -226,8 +223,7 @@ def cleanup(logfile, logtype):
 
 
 if len(sys.argv) <> 3:
-    print "Usage : CrobotsDB.py <conf.py> [f2f|3vs3|4vs4|all|test|setup|clean]"
-    raise SystemExit
+    raise SystemExit('Usage : CrobotsDB.py <conf.py> [f2f|3vs3|4vs4|all|test|setup|clean]')
 
 confFile = sys.argv[1]
 action = sys.argv[2]
@@ -246,32 +242,24 @@ try:
     if not os.path.exists(tmppath):
         os.makedirs(tmppath)
 except Exception, e:
-    print e
-    print 'Unable to create temp %s and %s' % (logpath, tmppath)
-    raise SystemExit
+    raise SystemExit('Unable to create temp %s and %s: %s' % (logpath, tmppath, e))
 
 if not os.path.exists(confFile):
-    print 'Configuration file %s does not exist' % confFile
-    raise SystemExit
+    raise SystemExit('Configuration file %s does not exist' % confFile)
 
 if not action in ['f2f', '3vs3', '4vs4', 'all', 'test', 'setup', 'clean']:
-    print 'Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test, setup, clean' % action
-    raise SystemExit
+    raise SystemExit('Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test, setup, clean' % action)
 
 try:
     configuration = load_from_file(confFile)
 except Exception, e:
-    print e
-    print 'Invalid configuration py file %s' % confFile
-    raise SystemExit
+    raise SystemExit('Invalid configuration py file %s: %s' % (confFile, e))
 
 if configuration is None:
-    print 'Invalid configuration py file %s' % confFile
-    raise SystemExit
+    raise SystemExit('Invalid configuration py file %s' % confFile)
 
 if len(configuration.listRobots) == 0:
-    print 'List of robots empty!'
-    raise SystemExit
+    raise SystemExit('List of robots empty!')
 
 if overrideConfiguration:
     print 'Override configuration...'
@@ -287,8 +275,7 @@ print 'Test opponents... ',
 for r in configuration.listRobots:
     robot = robotPath % (configuration.sourcePath, r)
     if not os.path.exists(robot):
-        print 'Robot file %s does not exist.' % robot
-        sys.exit(1)
+        raise SystemExit('Robot file %s does not exist.' % robot)
 
 print 'OK!'
 
@@ -359,4 +346,3 @@ if action in ['4vs4', 'all']:
 
 close_db()
 devNull.close()
-
