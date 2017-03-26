@@ -49,7 +49,7 @@ This is an example of configuration:
         listRobots = ['2013/lamela', '2013/eternity', '2013/ride', '2013/okapi', '2013/pjanic']
 
 If you run this configuration you'll get *2013_f2f.log*, *2013_3vs3.log*, *2013_4vs4.log* log files and *.db* database files respectively if database support is enable.
-Each face to face combat will have 1000 matches (CROBOTS command line option *-m1000*). Each 3 vs 3 combat will have 250 matches (CROBOTS command line option *-m250*). Each 4 vs 4 combat will have 168 matches (CROBOTS command line option *-m250*). E.g.:
+Each face to face combat will have 1000 matches (CROBOTS command line option *-m1000*). Each 3 vs 3 combat will have 250 matches (CROBOTS command line option *-m250*). Each 4 vs 4 combat will have 168 matches (CROBOTS command line option *-m168*). E.g.:
 
 ::
 
