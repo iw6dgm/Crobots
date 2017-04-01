@@ -1,3 +1,4 @@
+import imp
 import os
 import re
 import subprocess
@@ -22,6 +23,41 @@ P_CLEANUP = "TRUNCATE TABLE results_%s"
 UPDATE_SQL = "UPDATE results_%s SET games=%s, wins=%s, ties=%s, points=%s WHERE robot='%s'"
 
 cnx = None
+
+
+def check_stop_file_exist():
+    """check the stop file existance"""
+    if os.path.exists('Crobots.stop'):
+        return True
+    return False
+
+
+def clean_up_log_file(filepath):
+    """remove log file"""
+    try:
+        os.remove(filepath)
+    except:
+        pass
+
+
+def load_from_file(filepath):
+    """Load configuration py file with tournament parameters"""
+    class_inst = None
+    expected_class = 'Configuration'
+
+    mod_name, file_ext = os.path.splitext(os.path.split(filepath)[-1])
+
+    if file_ext.lower() == '.py':
+        py_mod = imp.load_source(mod_name, filepath)
+    elif file_ext.lower() == '.pyc' or file_ext.lower() == '.pyo':
+        py_mod = imp.load_compiled(mod_name, filepath)
+    else:
+        return class_inst
+
+    if hasattr(py_mod, expected_class):
+        class_inst = py_mod.Configuration()
+
+    return class_inst
 
 
 def test_connection():
@@ -213,7 +249,3 @@ def available_cpu_count():
         pass
 
     raise Exception('Can not determine number of CPUs on this system')
-
-
-
-

@@ -4,95 +4,72 @@
 """
 "CROBOTS" Crobots Merge DataBase support
 
-Version:        Python/1.0.2
+Version:        Python/1.1
 
                 Derived from CrobotsDB.py 1.0
 
 Author:         Maurizio Camangi
 
 Version History:
+                Version 1.1 i 'move' action: merge + clean sources
                 Version 1.0 is the first stable version
 
 """
 
-import sys
-import imp
-import shelve
 import os.path
-
+import shelve
+import sys
 
 STATUS_KEY = '__STATUS__'
 
 
-
-def clean_up_log_file(filepath):
-    "remove log file"
-    try:
-        os.remove(filepath)
-    except:
-        pass
-
-
-def load_from_file(filepath):
-    "Load configuration py file with tournament parameters"
-    class_inst = None
-    expected_class = 'Configuration'
-
-    mod_name, file_ext = os.path.splitext(os.path.split(filepath)[-1])
-
-    if file_ext.lower() == '.py':
-        py_mod = imp.load_source(mod_name, filepath)
-    elif file_ext.lower() == '.pyc' or file_ext.lower() == '.pyo':
-        py_mod = imp.load_compiled(mod_name, filepath)
-    else:
-        return class_inst
-
-    if hasattr(py_mod, expected_class):
-        class_inst = py_mod.Configuration()
-
-    return class_inst
-
-
-# initialize database
-def init_db(dbfile):
-    global configuration
-    dbase = shelve.open(dbfile, 'n')
-    for s in configuration.listRobots:
-        key = os.path.basename(s)
-        dbase[key] = [0, 0, 0, 0]
-    dbase.sync()
-    dbase.close()
-
-
 # update database
-def update_db():
-    dbase = shelve.open(dbaseout, 'w')
-    db1 = shelve.open(dbase1, 'r')
-    db2 = shelve.open(dbase2, 'r')
-    for key in dbase:
+def merge_db():
+    global dbaseout, dbase1, dbase2
+    dbout = shelve.open(dbaseout, 'c')
+    dbin1 = shelve.open(dbase1, 'r')
+    dbin2 = shelve.open(dbase2, 'c')
+    for key in dbin1:
         if STATUS_KEY == key:
             continue
-        if key in db1:
-            newvalues = db1[key]
-            values = dbase[key]
+        newvalues = dbin1[key]
+        if key in dbout:
+            values = dbout[key]
             values[0] += newvalues[0]
             values[1] += newvalues[1]
             values[2] += newvalues[2]
             values[3] += newvalues[3]
-            dbase[key] = values
-        if key in db2:
-            newvalues = db2[key]
-            values = dbase[key]
+            dbout[key] = values
+        else:
+            dbout[key] = newvalues
+
+        if key in dbin2:
+            newvalues = dbin2[key]
+            values = dbout[key]
             values[0] += newvalues[0]
             values[1] += newvalues[1]
             values[2] += newvalues[2]
             values[3] += newvalues[3]
-            dbase[key] = values
-    dbase.sync()
-    dbase.close()
-    db1.close()
-    db2.close()
-    # clean_up_log_file(txtfile)
+            dbout[key] = values
+    for key in dbin2:
+        if STATUS_KEY == key:
+            continue
+
+        if key not in dbin1:
+            newvalues = dbin2[key]
+            if key in dbout:
+                values = dbout[key]
+                values[0] += newvalues[0]
+                values[1] += newvalues[1]
+                values[2] += newvalues[2]
+                values[3] += newvalues[3]
+                dbout[key] = values
+            else:
+                dbout[key] = newvalues
+    dbout.sync()
+    dbout.close()
+    dbin1.close()
+    dbin2.close()
 
 
 # clean up database and status files
@@ -104,43 +81,31 @@ def cleanup(filepath):
     print 'Clean up done %s!' % filepath
 
 
-if len(sys.argv) <> 6:
-    raise SystemExit("Usage : CrobotsMergeDB.py <conf.py> <db1> <db2> <dbout> [merge|clean]")
+if len(sys.argv) <> 5:
+    raise SystemExit("Usage : CrobotsMergeDB.py <db1> <db2> <dbout> [merge|move|clean]")
 
-confFile = sys.argv[1]
-dbase1 = sys.argv[2]
-dbase2 = sys.argv[3]
-dbaseout = sys.argv[4]
-action = sys.argv[5]
+dbase1 = sys.argv[1]
+dbase2 = sys.argv[2]
+dbaseout = sys.argv[3]
+action = sys.argv[4]
 
-if not os.path.exists(confFile):
-    raise SystemExit('Configuration file %s does not exist' % confFile)
+if not os.path.exists(dbase1):
+    raise SystemExit('Source database does not exist')
 
-if any(not os.path.exists(db) for db in (dbase1, dbase2)):
-    raise SystemExit('Source databasas do not exist')
-
-if not action in ['merge', 'clean']:
-    raise SystemExit('Invalid parameter %s. Valid values are merge, clean' % action)
-
-try:
-    configuration = load_from_file(confFile)
-except Exception, e:
-    raise SystemExit('Invalid configuration py file %s: %s' % (confFile, e))
-
-if configuration == None:
-    print 'Invalid configuration py file %s' % confFile
-    raise SystemExit
-
-if len(configuration.listRobots) == 0:
-    raise SystemExit('List of robots empty!')
-
-print 'List size = %d' % len(configuration.listRobots)
+if not action in ['merge', 'move', 'clean']:
+    raise SystemExit('Invalid parameter %s. Valid values are [merge|move|clean]' % action)
 
 if action == 'clean':
     cleanup(dbaseout)
     raise SystemExit
 
 if action == 'merge':
-    init_db(dbaseout)
-    update_db()
+    merge_db()
     print 'Merge done!'
+    raise SystemExit
+
+if action == 'move':
+    merge_db()
+    cleanup(dbase1)
+    cleanup(dbase2)
+    raise SystemExit

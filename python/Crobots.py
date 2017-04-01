@@ -4,13 +4,14 @@
 """
 "CROBOTS" Crobots Batch Tournament Manager
 
-Version:        Python/1.6
+Version:        Python/1.7
 
                 Translated from 'run2012.sh' UNIX/bash to Python 2.7
 
 Author:         Maurizio Camangi
 
 Version History:
+                Version 1.7 No need of log files anymore
                 Version 1.6 Return error code on SystemExit after Exception
                 Version 1.5 Count Python support
                 Version 1.4.2 Polish code - use os.devnull - no more </dev/null needed
@@ -26,22 +27,24 @@ Version History:
 
 """
 
-import sys
-import imp
 import os.path
 import shlex
 import subprocess
+import sys
 import time
-from random import shuffle
 from itertools import combinations
-from shutil import copyfileobj
-from glob import iglob
+from random import shuffle
+
+import CrobotsLibs
 from Count import parse_log_file, show_report
-from CrobotsLibs import available_cpu_count
+from CrobotsLibs import available_cpu_count, check_stop_file_exist
 
 # Global configuration variables
+# databases
+dbase = None
 
 # default stdin and stderr for crobots executable
+PIPE = -1
 devNull = open(os.devnull)
 
 # command line strings
@@ -57,101 +60,68 @@ print "Detected %s CPU(s)" % CPUs
 spawnList = []
 
 
-def run_crobots(tmppath, logpath, logfile, logtype):
+# initialize database
+def init_db():
+    global configuration, dbase
+    dbase = dict()
+    for s in configuration.listRobots:
+        key = os.path.basename(s)
+        dbase[key] = [key, 0, 0, 0, 0]
+
+
+# update database
+def update_db(lines):
+    global dbase
+    robots = parse_log_file(lines)
+    for r in robots.values():
+        name = r[0]
+        values = dbase[name]
+        values[0] = name
+        values[1] += r[1]
+        values[2] += r[2]
+        values[3] += r[3]
+        values[4] += r[4]
+        dbase[name] = values
+
+
+def run_crobots():
     """spawn crobots command lines in subprocesses"""
     global spawnList
     procs = []
     # spawn processes
-    for i, s in enumerate(spawnList):
+    for s in spawnList:
         try:
-            tmpfile = open(os.path.normpath("%s/tmp_%s_%s_%s.log" % (tmppath, logfile, i, logtype)), 'w')
-            procs.append(subprocess.Popen(shlex.split(s), stderr=devNull, stdout=tmpfile))
-        finally:
-            tmpfile.close()
+            procs.append(subprocess.Popen(shlex.split(s), stdout=PIPE, stderr=devNull))
+        except OSError, e:
+            raise SystemExit(e)
     # wait
     for proc in procs:
         proc.wait()
     # check for errors
     if any(proc.returncode != 0 for proc in procs):
         raise SystemExit('Something failed!')
-    # aggregate log files
-    try:
-        with open(os.path.normpath('%s/%s_%s.log' % (logpath, logfile, logtype)), 'a') as destination:
-            logfiles = 'tmp_%s_*_%s.log' % (logfile, logtype)
-            for filename in iglob(os.path.join(tmppath, logfiles)):
-                copyfileobj(open(filename, 'r'), destination)
-                clean_up_log_file(filename)
-    except OSError, e:
-        raise SystemExit(e)
-    # clean up temporary log files
-    for i in xrange(len(spawnList)):
-        clean_up_log_file(os.path.normpath("%s/tmp_%s_%s_%s.log" % (tmppath, logfile, i, logtype)))
+    # aggregate logs
+    lines = []
+    for proc in procs:
+        output, unused_err = proc.communicate()
+        for s in output.split('\n'):
+            lines.append(s)
+    update_db(lines)
     spawnList = []
 
 
-def spawn_crobots_run(tmppath, cmdLine, logpath, logfile, logtype):
+def spawn_crobots_run(cmdLine):
     """put command lines into the buffer and run"""
     global spawnList, CPUs
     spawnList.append(cmdLine)
     if len(spawnList) == CPUs:
-        run_crobots(tmppath, logpath, logfile, logtype)
+        run_crobots()
 
 
-def run_count(logpath, logfile, logtype):
-    """run the count log parser"""
-    try:
-        logFile = os.path.normpath('%s/%s_%s.log' % (logpath, logfile, logtype))
-        txt = open(logFile, 'r')
-        lines = txt.readlines()
-        txt.close()
-
-        robots = parse_log_file(lines)
-        show_report(robots)
-
-        clean_up_log_file(logFile)
-    except OSError, e:
-        print e
-
-
-def check_stop_file_exist():
-    """check the stop file existance"""
-    if os.path.exists('Crobots.stop'):
-        print 'Crobots.stop found! Exit application.'
-        raise SystemExit
-
-
-def clean_up_log_file(filepath):
-    """remove log file"""
-    try:
-        os.remove(os.path.normpath(filepath))
-    except:
-        pass
-
-
-def build_crobots_cmdline(paramCmdLine, robotList, tmppath, logpath, logfile, logtype):
+def build_crobots_cmdline(paramCmdLine, robotList):
     """build and run crobots command lines"""
     shuffle(robotList)
-    spawn_crobots_run(tmppath, " ".join([paramCmdLine] + robotList), logpath, logfile, logtype)
-
-
-def load_from_file(filepath):
-    """Load configuration py file with tournament parameters"""
-    class_inst = None
-    expected_class = 'Configuration'
-
-    mod_name, file_ext = os.path.splitext(os.path.split(filepath)[-1])
-
-    if file_ext.lower() == '.py':
-        py_mod = imp.load_source(mod_name, filepath)
-    elif file_ext.lower() == '.pyc' or file_ext.lower() == '.pyo':
-        py_mod = imp.load_compiled(mod_name, filepath)
-    else:
-        return class_inst
-
-    if hasattr(py_mod, expected_class):
-        class_inst = py_mod.Configuration()
-
-    return class_inst
+    spawn_crobots_run(" ".join([paramCmdLine] + robotList))
 
 
 if len(sys.argv) <> 3:
@@ -160,22 +130,6 @@ if len(sys.argv) <> 3:
 confFile = sys.argv[1]
 action = sys.argv[2]
 
-# Temp and Log dir: configurable if you want
-uid = os.getuid()
-print 'Found UID %s' % uid
-tmpfs = '/run/user/%s/crobots' % uid
-logpath = '%s/log' % tmpfs
-tmppath = '%s/tmp' % tmpfs
-
-print 'Setup temp directories...'
-try:
-    if not os.path.exists(logpath):
-        os.makedirs(logpath)
-    if not os.path.exists(tmppath):
-        os.makedirs(tmppath)
-except Exception, e:
-    raise SystemExit('Unable to create temp %s and %s: %s' % (logpath, tmppath, e))
-
 if not os.path.exists(confFile):
     raise SystemExit('Configuration file %s does not exist' % confFile)
 
@@ -183,7 +137,7 @@ if not action in ['f2f', '3vs3', '4vs4', 'all', 'test']:
     raise SystemExit('Invalid parameter %s. Valid values are f2f, 3vs3, 4vs4, all, test' % action)
 
 try:
-    configuration = load_from_file(confFile)
+    configuration = CrobotsLibs.load_from_file(confFile)
 except Exception, e:
     raise SystemExit('Invalid configuration py file %s: %s' % (confFile, e))
 
@@ -219,13 +173,15 @@ if action == 'test':
 def run_tournament(ptype, num, matchParam):
     global tmppath, logpath, robotPath, configuration, crobotsCmdLine
     print '%s Starting %s... ' % (time.ctime(), ptype.upper())
-    clean_up_log_file(os.path.normpath('%s/%s_%s.log' % (logpath, configuration.label, ptype)))
+    init_db()
     param = crobotsCmdLine % matchParam
     for r in combinations(configuration.listRobots, num):
-        check_stop_file_exist()
-        build_crobots_cmdline(param, [robotPath % (configuration.sourcePath, s) for s in r], tmppath, logpath, configuration.label, ptype)
-    if len(spawnList) > 0: run_crobots(tmppath, logpath, configuration.label, ptype)
-    run_count(logpath, configuration.label, ptype)
+        if check_stop_file_exist():
+            print 'Crobots.stop found! Exit application.'
+            raise SystemExit
+        build_crobots_cmdline(param, [robotPath % (configuration.sourcePath, s) for s in r])
+    if len(spawnList) > 0: run_crobots()
+    show_report(dbase)
     print '%s %s completed!' % (time.ctime(), ptype.upper())
 
 

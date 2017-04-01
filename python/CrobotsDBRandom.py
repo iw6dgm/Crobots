@@ -23,24 +23,23 @@ Version History:
 
 """
 
-import sys
-import imp
+import os.path
+import shelve
 import shlex
 import subprocess
+import sys
 import time
-import shelve
-import os.path
 from random import shuffle
-from shutil import copyfileobj
-from glob import iglob
+
 from Count import parse_log_file
-from CrobotsLibs import available_cpu_count
+from CrobotsLibs import available_cpu_count, check_stop_file_exist, clean_up_log_file, load_from_file
 
 # Global configuration variables
 # databases
 dbase = None
 
 # default stdin and stderr for crobots executable
+PIPE = -1
 devNull = open(os.devnull)
 
 # command line strings
@@ -68,15 +67,14 @@ def peek(l, n):
     return
 
 
-def run_crobots(tmppath, logpath, logfile, logtype):
+def run_crobots():
     "spawn crobots command lines in subprocesses"
     global spawnList
     procs = []
     # spawn processes
-    for i, s in enumerate(spawnList):
+    for s in spawnList:
         try:
-            with open("%s/tmp_%s_%s_%s.log" % (tmppath, logfile, i, logtype), 'w') as tmpfile:
-                procs.append(subprocess.Popen(shlex.split(s), stdin=devNull, stderr=devNull, stdout=tmpfile))
+            procs.append(subprocess.Popen(shlex.split(s), stdout=PIPE, stderr=devNull))
         except OSError, e:
             raise SystemExit(e)
     # wait
@@ -85,74 +83,34 @@ def run_crobots(tmppath, logpath, logfile, logtype):
     # check for errors
     if any(proc.returncode != 0 for proc in procs):
         raise SystemExit('Something failed!')
-    # aggregate log files
-    try:
-        with open('%s/%s_%s.log' % (logpath, logfile, logtype), 'a') as destination:
-            logfiles = 'tmp_%s_*_%s.log' % (logfile, logtype)
-            for filename in iglob(os.path.join(tmppath, logfiles)):
-                copyfileobj(open(filename, 'r'), destination)
-                clean_up_log_file(filename)
-    except OSError, e:
-        raise SystemExit(e)
-    update_db(logpath, logfile, logtype)
+    # aggregate logs
+    lines = []
+    for proc in procs:
+        output, unused_err = proc.communicate()
+        for s in output.split('\n'):
+            lines.append(s)
+    update_db(lines)
     spawnList = []
 
 
-def spawn_crobots_run(tmppath, cmdLine, logpath, logfile, logtype):
+def spawn_crobots_run(cmdLine):
     "put command lines into the buffer and run"
     global spawnList, CPUs
     spawnList.append(cmdLine)
     if len(spawnList) == CPUs:
-        run_crobots(tmppath, logpath, logfile, logtype)
+        run_crobots()
 
 
-def check_stop_file_exist():
-    "check the stop file existance"
-    if os.path.exists('Crobots.stop'):
-        return True
-    return False
-
-
-def clean_up_log_file(filepath):
-    "remove log file"
-    try:
-        os.remove(filepath)
-    except:
-        pass
-
-
-def build_crobots_cmdline(tmppath, paramCmdLine, robotList, logpath, logfile, logtype):
+def build_crobots_cmdline(paramCmdLine, robotList):
     "build and run crobots command lines"
     # shuffle(robotList)
-    spawn_crobots_run(tmppath, " ".join([paramCmdLine] + robotList), logpath, logfile, logtype)
-
-
-def load_from_file(filepath):
-    "Load configuration py file with tournament parameters"
-    class_inst = None
-    expected_class = 'Configuration'
-
-    mod_name, file_ext = os.path.splitext(os.path.split(filepath)[-1])
-
-    if file_ext.lower() == '.py':
-        py_mod = imp.load_source(mod_name, filepath)
-    elif file_ext.lower() == '.pyc' or file_ext.lower() == '.pyo':
-        py_mod = imp.load_compiled(mod_name, filepath)
-    else:
-        return class_inst
-
-    if hasattr(py_mod, expected_class):
-        class_inst = py_mod.Configuration()
-
-    return class_inst
+    spawn_crobots_run(" ".join([paramCmdLine] + robotList))
 
 
 # initialize database
 def init_db(logfile, logtype):
     global configuration, startStatus, dbase
     dbfile = 'db/%s_%s.db' % (logfile, logtype)
-    # statusfile = 'db/status_%s_%s.txt' % (logfile, logtype)
-    #   start = startStatus[logtype]
     if not os.path.exists(dbfile):
         dbase = shelve.open(dbfile, 'c')
         for s in configuration.listRobots:
@@ -170,15 +128,8 @@ def init_db(logfile, logtype):
 
 
 # update database
-def update_db(logpath, logfile, logtype):
+def update_db(lines):
     global dbase
-    log = '%s/%s_%s.log' % (logpath, logfile, logtype)
-    if not os.path.exists(log):
-        close_db()
-        raise SystemExit('%s does not exists!' % log)
-    txt = open(log, 'r')
-    lines = txt.readlines()
-    txt.close()
     robots = parse_log_file(lines)
     for r in robots.values():
         name = r[0]
@@ -189,7 +140,6 @@ def update_db(logpath, logfile, logtype):
         values[3] += r[4]
         dbase[name] = values
     dbase.sync()
-    clean_up_log_file(log)
 
 
 def close_db():
@@ -214,22 +164,6 @@ if len(sys.argv) <> 3:
 
 confFile = sys.argv[1]
 action = sys.argv[2]
-
-# Temp and Log dir: configurable if you want
-uid = os.getuid()
-print 'Found UID %s' % uid
-tmpfs = '/run/user/%s/crobots' % uid
-logpath = '%s/log' % tmpfs
-tmppath = '%s/tmp' % tmpfs
-
-print 'Setup temp directories...'
-try:
-    if not os.path.exists(logpath):
-        os.makedirs(logpath)
-    if not os.path.exists(tmppath):
-        os.makedirs(tmppath)
-except Exception, e:
-    raise SystemExit('Unable to create temp %s and %s: %s' % (logpath, tmppath, e))
 
 if not os.path.exists(confFile):
     raise SystemExit('Configuration file %s does not exist' % confFile)
@@ -277,7 +211,6 @@ if action == 'test':
     print 'Test completed!'
     raise SystemExit
 
-
 if check_stop_file_exist():
     print 'Crobots.stop file found! Exit application.'
     close_db()
@@ -287,7 +220,6 @@ if check_stop_file_exist():
 def run_tournament(ptype, matchParam):
     global countCmdLine, matches, tmppath, logpath, LIMIT
     print '%s Starting %s... ' % (time.ctime(), ptype.upper())
-    clean_up_log_file('%s/%s_%s.log' % (logpath, configuration.label, ptype))
     param = crobotsCmdLine % matchParam
     temp = configuration.listRobots
     counter = init_db(configuration.label, ptype)
@@ -295,10 +227,7 @@ def run_tournament(ptype, matchParam):
     n = matches[ptype]
     while (not check_stop_file_exist()) and (counter < LIMIT):
         for r in peek(temp, n):
-            build_crobots_cmdline(tmppath, param, [robotPath % (configuration.sourcePath, s) for s in r],
-                                  logpath,
-                                  configuration.label,
-                                  ptype)
+            build_crobots_cmdline(param, [robotPath % (configuration.sourcePath, s) for s in r])
             counter += matchParam
             if counter >= LIMIT:
                 break
@@ -308,6 +237,7 @@ def run_tournament(ptype, matchParam):
         raise SystemExit
     print '%s %s completed!' % (time.ctime(), ptype.upper())
     close_db()
+
 
 if action in ['3vs3', 'all']:
     run_tournament('3vs3', configuration.match3VS3)
