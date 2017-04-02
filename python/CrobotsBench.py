@@ -28,16 +28,13 @@ import time
 from itertools import combinations
 from random import shuffle
 
-from CrobotsLibs import available_cpu_count, check_stop_file_exist, clean_up_log_file, load_from_file
 from Count import parse_log_file, show_report
+from CrobotsLibs import available_cpu_count, check_stop_file_exist, clean_up_log_file, load_from_file
 
 # Global configuration variables
 # databases
 dbase = None
 matches = {'f2f': 1, '3vs3': 2, '4vs4': 3}
-
-# default stdin and stderr for crobots executable
-devNull = open(os.devnull)
 
 # command line strings
 robotPath = "%s/%s.ro"
@@ -84,10 +81,11 @@ def run_crobots():
     procs = []
     # spawn processes
     for s in spawnList:
-        try:
-            procs.append(subprocess.Popen(shlex.split(s), stdout=subprocess.PIPE, stderr=devNull))
-        except OSError, e:
-            raise SystemExit(e)
+        with open(os.devnull, 'w') as devnull:
+            try:
+                procs.append(subprocess.Popen(shlex.split(s), stdout=subprocess.PIPE, stderr=devnull, close_fds=True))
+            except OSError, e:
+                raise SystemExit(e)
     # wait
     for proc in procs:
         proc.wait()
@@ -166,11 +164,12 @@ if not os.path.exists(robotTest):
 else:
     print 'Compiling %s ...' % robotTest,
     clean_up_log_file(robotTest + 'o')
-    try:
-        p = subprocess.Popen(shlex.split("crobots -c %s" % robotTest), stdin=devNull, stdout=devNull, stderr=devNull)
-        p.wait()
-    except Exception, e:
-        raise SystemExit('Error on compiling Robot %s: %s' % (robotTest, e))
+    with open(os.devnull, 'w') as devnull:
+        try:
+            p = subprocess.Popen(shlex.split("crobots -c %s" % robotTest), stdout=devnull, stderr=devnull, close_fds=True)
+            p.wait()
+        except Exception, e:
+            raise SystemExit('Error on compiling Robot %s: %s' % (robotTest, e))
     if not os.path.exists(robotTest + 'o'):
         raise SystemExit('Robot %s does not compile' % robotTest)
 
@@ -205,5 +204,3 @@ if action in ['3vs3', 'all']:
 
 if action in ['4vs4', 'all']:
     run_tournament('4vs4', configuration.match4VS4)
-
-devNull.close()

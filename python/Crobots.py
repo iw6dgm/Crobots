@@ -43,9 +43,6 @@ from CrobotsLibs import available_cpu_count, check_stop_file_exist
 # databases
 dbase = None
 
-# default stdin and stderr for crobots executable
-devNull = open(os.devnull)
-
 # command line strings
 robotPath = "%s/%s.ro"
 crobotsCmdLine = "crobots -m%s -l200000"
@@ -89,10 +86,11 @@ def run_crobots():
     procs = []
     # spawn processes
     for s in spawnList:
-        try:
-            procs.append(subprocess.Popen(shlex.split(s), stdout=subprocess.PIPE, stderr=devNull))
-        except OSError, e:
-            raise SystemExit(e)
+        with open(os.devnull, 'w') as devnull:
+            try:
+                procs.append(subprocess.Popen(shlex.split(s), stdout=subprocess.PIPE, stderr=devnull, close_fds=True))
+            except OSError, e:
+                raise SystemExit(e)
     # wait
     for proc in procs:
         proc.wait()
@@ -192,5 +190,3 @@ if action in ['3vs3', 'all']:
 
 if action in ['4vs4', 'all']:
     run_tournament('4vs4', 4, configuration.match4VS4)
-
-devNull.close()
