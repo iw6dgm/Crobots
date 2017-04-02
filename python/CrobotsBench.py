@@ -86,12 +86,6 @@ def run_crobots():
                 procs.append(subprocess.Popen(shlex.split(s), stdout=subprocess.PIPE, stderr=devnull, close_fds=True))
             except OSError, e:
                 raise SystemExit(e)
-    # wait
-    for proc in procs:
-        proc.wait()
-    # check for errors
-    if any(proc.returncode != 0 for proc in procs):
-        raise SystemExit('Something failed!')
     # aggregate logs
     lines = []
     for proc in procs:
@@ -166,8 +160,8 @@ else:
     clean_up_log_file(robotTest + 'o')
     with open(os.devnull, 'w') as devnull:
         try:
-            p = subprocess.Popen(shlex.split("crobots -c %s" % robotTest), stdout=devnull, stderr=devnull, close_fds=True)
-            p.wait()
+            p = subprocess.Popen(shlex.split("crobots -c %s" % robotTest), stdout=devnull, stderr=devnull)
+            p.communicate()
         except Exception, e:
             raise SystemExit('Error on compiling Robot %s: %s' % (robotTest, e))
     if not os.path.exists(robotTest + 'o'):

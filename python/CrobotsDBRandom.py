@@ -71,15 +71,9 @@ def run_crobots():
     for s in spawnList:
         with open(os.devnull, 'w') as devnull:
             try:
-                procs.append(subprocess.Popen(shlex.split(s), stdout=subprocess.PIPE, stderr=devnull, close_fds=True))
+                procs.append(subprocess.Popen(shlex.split(s), stdout=subprocess.PIPE, stderr=devnull))
             except OSError, e:
                 raise SystemExit(e)
-    # wait
-    for proc in procs:
-        proc.wait()
-    # check for errors
-    if any(proc.returncode != 0 for proc in procs):
-        raise SystemExit('Something failed!')
     # aggregate logs
     lines = []
     for proc in procs:
