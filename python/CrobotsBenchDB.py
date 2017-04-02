@@ -42,7 +42,6 @@ dbase = None
 matches = {'f2f': 1, '3vs3': 2, '4vs4': 3}
 
 # default stdin and stderr for crobots executable
-PIPE = -1
 devNull = open(os.devnull)
 
 # command line strings
@@ -65,7 +64,7 @@ def run_crobots():
     # spawn processes
     for s in spawnList:
         try:
-            procs.append(subprocess.Popen(shlex.split(s), stdout=PIPE, stderr=devNull))
+            procs.append(subprocess.Popen(shlex.split(s), stdout=subprocess.PIPE, stderr=devNull))
         except OSError, e:
             raise SystemExit(e)
     # wait

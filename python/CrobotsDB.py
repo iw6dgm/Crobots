@@ -47,7 +47,6 @@ STATUS_KEY = '__STATUS__'
 dbase = None
 
 # default stdin and stderr for crobots executable
-PIPE = -1
 devNull = open(os.devnull)
 
 # command line strings
@@ -72,7 +71,7 @@ def run_crobots(logtype):
     # spawn processes
     for s in spawnList:
         try:
-            procs.append(subprocess.Popen(shlex.split(s), stdin=devNull, stdout=PIPE, stderr=devNull))
+            procs.append(subprocess.Popen(shlex.split(s), stdout=subprocess.PIPE, stderr=devNull))
         except OSError, e:
             raise SystemExit(e)
     # wait
