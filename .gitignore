@@ -1,3 +1,5 @@
 /target
+pairings/target
 .idea/*
 *.iml
+*.xml
