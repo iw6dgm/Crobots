@@ -1,6 +1,8 @@
 *Crobots Java Tournament Manager*
 =================================
 
+*Note*: This project is no longer maintained (with the exception of the Pairing sub-module, perhaps) in favour of the Python and Golang alternatives.
+
 Multi-platform Client Java for setup and running of a Crobots's tournament.
 It handles MySQL, MS SQL, Oracle databases.
 
