@@ -21,36 +21,35 @@ public class Pairings {
     private static final int match3vs3 = 15;
     private static final int match4vs4 = 1;
     private static final String label = "group";
-    private static List<String> torneo90 = new ArrayList<>(8);
-    private static List<String> torneo91 = new ArrayList<>(23);
-    private static List<String> torneo92 = new ArrayList<>(56);
-    private static List<String> torneo93 = new ArrayList<>(68);
-    private static List<String> torneo94 = new ArrayList<>(47);
-    private static List<String> torneo95 = new ArrayList<>(42);
-    private static List<String> torneo96 = new ArrayList<>(35);
-    private static List<String> torneo97 = new ArrayList<>(29);
-    private static List<String> torneo98 = new ArrayList<>(32);
-    private static List<String> torneo99 = new ArrayList<>(53);
-    private static List<String> torneo2000 = new ArrayList<>(29);
-    private static List<String> torneo2001 = new ArrayList<>(53);
-    private static List<String> torneo2002 = new ArrayList<>(54);
-    private static List<String> torneo2003 = new ArrayList<>(64);
-    private static List<String> torneo2004 = new ArrayList<>(46);
-    private static List<String> torneo2007 = new ArrayList<>(28);
-    private static List<String> torneo2010 = new ArrayList<>(22);
-    private static List<String> torneo2011 = new ArrayList<>(26);
-    private static List<String> torneo2012 = new ArrayList<>(34);
-    private static List<String> torneo2013 = new ArrayList<>(26);
-    private static List<String> torneo2015 = new ArrayList<>(41);
-    private static List<String> torneo2020 = new ArrayList<>(24);
-    private static List<String> micro = new ArrayList<>(23);
-    private static List<String> crobs = new ArrayList<>(97);
-    private static List<String> aminet = new ArrayList<>(8);
-    private static List<String> cplusplus = new ArrayList<>(2);
-    private static List<List<String>> tournaments = new ArrayList<>(26);
+    private static final List<String> torneo90 = new ArrayList<>(8);
+    private static final List<String> torneo91 = new ArrayList<>(23);
+    private static final List<String> torneo92 = new ArrayList<>(56);
+    private static final List<String> torneo93 = new ArrayList<>(68);
+    private static final List<String> torneo94 = new ArrayList<>(47);
+    private static final List<String> torneo95 = new ArrayList<>(42);
+    private static final List<String> torneo96 = new ArrayList<>(35);
+    private static final List<String> torneo97 = new ArrayList<>(29);
+    private static final List<String> torneo98 = new ArrayList<>(32);
+    private static final List<String> torneo99 = new ArrayList<>(53);
+    private static final List<String> torneo2000 = new ArrayList<>(29);
+    private static final List<String> torneo2001 = new ArrayList<>(53);
+    private static final List<String> torneo2002 = new ArrayList<>(54);
+    private static final List<String> torneo2003 = new ArrayList<>(64);
+    private static final List<String> torneo2004 = new ArrayList<>(46);
+    private static final List<String> torneo2007 = new ArrayList<>(28);
+    private static final List<String> torneo2010 = new ArrayList<>(22);
+    private static final List<String> torneo2011 = new ArrayList<>(26);
+    private static final List<String> torneo2012 = new ArrayList<>(34);
+    private static final List<String> torneo2013 = new ArrayList<>(26);
+    private static final List<String> torneo2015 = new ArrayList<>(41);
+    private static final List<String> torneo2020 = new ArrayList<>(24);
+    private static final List<String> micro = new ArrayList<>(23);
+    private static final List<String> crobs = new ArrayList<>(97);
+    private static final List<String> aminet = new ArrayList<>(8);
+    private static final List<String> cplusplus = new ArrayList<>(2);
+    private static final List<List<String>> tournaments = new ArrayList<>(26);
     private static Set<String> round;
     private static List<Set<String>> rounds;
-    private static boolean withConflicts;
     private static int robots;
 
     /**
@@ -60,6 +59,7 @@ public class Pairings {
         setup();
         countRobots();
         int attempts = 0;
+        boolean withConflicts;
         do {
             System.out.println("ATTEMPT : " + ++attempts);
             shuffle();
@@ -146,7 +146,7 @@ public class Pairings {
     }
 
     private static void collect() {
-        tournaments = new ArrayList<>();
+        tournaments.clear();
         tournaments.add(torneo90);
         tournaments.add(torneo91);
         tournaments.add(torneo92);
