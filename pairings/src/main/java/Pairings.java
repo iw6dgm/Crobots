@@ -48,6 +48,7 @@ public class Pairings {
     private static final List<String> aminet = new ArrayList<>(8);
     private static final List<String> cplusplus = new ArrayList<>(2);
     private static final List<List<String>> tournaments = new ArrayList<>(26);
+    private static final String[] TYPES = {"f2f", "3vs3", "4vs4"};
     private static Set<String> round;
     private static List<Set<String>> rounds;
     private static int robots;
@@ -68,6 +69,7 @@ public class Pairings {
         } while (withConflicts);
         show();
         buildConfigFileYAML();
+        buildSQLInserts();
     }
     /**
      * 
@@ -103,8 +105,8 @@ public class Pairings {
         int n = 1;
         for (Set<String> round : rounds) {
             int count = 0;
-            if (round != null && round.size() > 0) {
-                System.out.println("------- CFG " + n + " ------");
+            if (round.size() > 0) {
+                System.out.println("------- CFG group" + n + " ------");
                 System.out.println("class Configuration(object):");
                 System.out.printf("\tmatchF2F = %d\n\tmatch3VS3 = %d\n\tmatch4VS4 = %d\n\tsourcePath = '.'\n", matchF2F, match3vs3, match4vs4);
                 System.out.printf("\tlabel = '%s%d'\n", label, n++);
@@ -128,8 +130,8 @@ public class Pairings {
         int n = 1;
         for (Set<String> round : rounds) {
             int count = 0;
-            if (round != null && round.size() > 0) {
-                System.out.println("------- CFG " + n + " ------");
+            if (round.size() > 0) {
+                System.out.println("------- CFG group" + n + " ------");
                 System.out.printf("matchF2F: %d\nmatch3VS3: %d\nmatch4VS4: %d\nsourcePath: '.'\n", matchF2F, match3vs3, match4vs4);
                 System.out.printf("label: '%s%d'\n", label, n++);
                 final StringBuilder sb = new StringBuilder("listRobots: [");
@@ -143,6 +145,36 @@ public class Pairings {
                 System.out.println(sb.toString());
             }
         }
+    }
+
+    /**
+     * Prints SQL Insert statements to initialise reports tables
+     */
+    private static void buildSQLInserts() {
+        int n = 1;
+        for (Set<String> round : rounds) {
+            int count = 0;
+            int size = round.size()-1;
+            if (round.size() > 0) {
+                System.out.println("------- SQL group" + n++ + " ------");
+                final StringBuilder values = new StringBuilder();
+                for (String s : round) {
+                    values.append(String.format("('%s')", getBasename(s)));
+                    if (count++ != size) {
+                        values.append(",\n");
+                    }
+                }
+                values.append(";");
+                final String sql = values.toString();
+                for (String table : TYPES) {
+                    System.out.printf("------- %s -------\n", table);
+                    System.out.printf("DELETE FROM `results_%s`;\n", table);
+                    System.out.printf("INSERT INTO `results_%s` (robot) VALUES\n", table);
+                    System.out.println(sql);
+                }
+            }
+        }
+
     }
 
     private static void collect() {
